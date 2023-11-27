@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 
 import 'camera_view.dart';
-import 'gallery_view.dart';
+import '../../../gallery_view.dart';
 
 enum DetectorViewMode { liveFeed, gallery }
 
@@ -61,6 +61,17 @@ class _DetectorViewState extends State<DetectorView> {
             onImage: widget.onImage,
             onDetectorViewModeChanged: _onDetectorViewModeChanged);
   }
+  // @override
+  // Widget build(BuildContext context) {
+  //   return CameraView(
+  //     customPaint: widget.customPaint,
+  //     onImage: widget.onImage,
+  //     onCameraFeedReady: widget.onCameraFeedReady,
+  //     onDetectorViewModeChanged: _onDetectorViewModeChanged,
+  //     initialCameraLensDirection: widget.initialCameraLensDirection,
+  //     onCameraLensDirectionChanged: widget.onCameraLensDirectionChanged,
+  //   );
+  // }
 
   void _onDetectorViewModeChanged() {
     if (_mode == DetectorViewMode.liveFeed) {

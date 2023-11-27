@@ -486,28 +486,7 @@
 
 //         Map<String, dynamic> poseCoordinatesResults =
 //             await compute(poseEstimationProcess, data);
-//         print("CHECKING1231547654");
-//         print("deviceOrientation-> ${_controller.value.deviceOrientation}");
-//         print("raw-> ${image.format.raw}");
-//         print("length-> ${image.planes.length}");
-//         print("first-> ${image.planes.first}");
-//         print("width-> ${image.width.toDouble()}");
-//         print("height-> ${image.height.toDouble()}");
-
-//         print(
-//             "++landmarkAnkleLeft_x->  ${poseCoordinatesResults['landmarkWristRight_x']}");
-//         print(
-//             "++landmarkAnkleLeft_y->  ${poseCoordinatesResults['landmarkWristRight_y']}");
-
-//         print("_controller.value.aspectRatio ${_controller.value.aspectRatio}");
-
-//         print("++poseInstance->  ${poseCoordinatesResults['allPose']}");
-//         print("imageSizeCheck -> ${_controller.value.previewSize!}");
-//         print(
-//             "imageSizeCheckHeight -> ${_controller.value.previewSize!.width}");
-//         print(
-//             "imageSizeCheckWidth -> ${_controller.value.previewSize!.height}");
-
+        
 //         print("going in");
 //         if (poseCoordinatesResults['allPose'] != null) {
 //           print("its NOT a null");
