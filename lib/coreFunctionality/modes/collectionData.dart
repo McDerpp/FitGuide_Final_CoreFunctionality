@@ -1,4 +1,5 @@
 import 'dart:core';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 
@@ -82,6 +83,12 @@ class _collectionDataState extends State<collectionData> {
   bool isDataCollected = true;
   int collectingCtr = 0;
   double _progress = 0.0;
+  double _sliderValue = 0.0;
+  int _sliderValue2 = 0;
+  double variance = 0;
+  int numFrameVariance = 5;
+  int collectingCtrDelay = 0;
+
   // ---------------------collecting data mode variables----------------------------------------------------------
 // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -215,9 +222,9 @@ class _collectionDataState extends State<collectionData> {
 
         if (value == true && checkFramesCaptured == false) {
           checkFramesCaptured = true;
-          framesCapturedCtr++;
+          // framesCapturedCtr++;
 
-          framesCapturedCtr = 0;
+          // framesCapturedCtr = 0;
 
           if (nowPerforming == true) {
             collectingCtr++;
@@ -229,17 +236,18 @@ class _collectionDataState extends State<collectionData> {
                 dynamicCountDownText = 'collected';
                 dynamicCountDownColor = secondaryColor;
                 coordinatesData.add(inferencingList);
-
+                print(
+                    "coordinatesDatatest ---- ${coordinatesData.last.length}");
                 execTotalFrames = execTotalFrames + inferencingList.length;
 
-                inferencingData = {
-                  'coordinatesData': inferencingList,
-                  'token': rootIsolateTokenInferencing,
-                };
+                // inferencingData = {
+                //   'coordinatesData': inferencingList,
+                //   'token': rootIsolateTokenInferencing,
+                // };
 
                 numExec++;
 
-                queueInferencingData.add(inferencingData);
+                // queueInferencingData.add(inferencingData);
               }
 
               inferencingList = [];
@@ -277,14 +285,7 @@ class _collectionDataState extends State<collectionData> {
               nowPerforming == false) {
             nowPerforming = true;
           }
-          //---------------after not moving for 3 sec-------------------------
 
-          // execTotalFrames = execTotalFrames + noMovementCtr;
-
-          // Map<String, dynamic> inferencingData = {
-          //   'inferencingData': inferencingList.sublist(0, noMovementCtr),
-          //   'token': rootIsolateTokenInferencing,
-          // };
           noMovementCtr = 0;
 
           setState(() {
@@ -340,15 +341,61 @@ class _collectionDataState extends State<collectionData> {
     if (mounted) {
       setState(() {});
     }
+
+    calculateVariance(numFrameVariance);
   }
 
   void updateProgress(double progress) {
     print("UPDATING PROGRESS ---> , $progress");
     setState(() {
-      // Update your state variables based on the progress
-      // For example, assign the progress to a variable to display it in the UI
       _progress = progress;
     });
+  }
+
+  // void updateCollectingCtrDelay(int value) {
+  //   collectingCtrDelay = value;
+  //   setState(() {
+  //     _progress = progress;
+  //   });
+  // }
+
+  void undoExecution(int undoTimes) {
+    int temp = 0;
+    int tempexecTotalFrames = execTotalFrames;
+    for (int ctr = 0; ctr < undoTimes; ctr++) {
+      if (coordinatesData.isNotEmpty) {
+        tempexecTotalFrames =
+            (tempexecTotalFrames - coordinatesData.last.length).toInt();
+        coordinatesData.removeLast();
+        numExec--;
+      }
+    }
+    setState(() {
+      nowPerforming = false;
+
+      execTotalFrames = tempexecTotalFrames;
+      avgFrames = execTotalFrames / numExec;
+      resultAvgFrames = avgFrames.toStringAsFixed(2);
+      avgFrames = double.parse(resultAvgFrames);
+    });
+  }
+
+  void calculateVariance(int numFrameGroup) {
+    if (coordinatesData.length % numFrameGroup == 0) {
+      variance = 0;
+      for (int ctr = 0; ctr <= numFrameGroup; ctr++) {
+        double squaredDifferences = pow(
+                (coordinatesData.elementAt(coordinatesData.length - ctr) -
+                    avgFrames),
+                2)
+            .toDouble();
+        variance = variance + squaredDifferences;
+      }
+
+      setState(() {
+        variance = variance / numFrameGroup;
+      });
+    }
   }
 
   @override
@@ -358,33 +405,6 @@ class _collectionDataState extends State<collectionData> {
     return Scaffold(
       body: Stack(
         children: [
-          // Align(
-          //   alignment: Alignment.topCenter,
-          //   child: Transform.translate(
-          //     offset: Offset(0.0, -150.0), // Adjust the y-value to move it up
-          //     child: Column(
-          //       mainAxisAlignment: MainAxisAlignment.end,
-          //       children: [
-          //         Text(
-          //           "Now performing:",
-          //           style: TextStyle(
-          //             fontSize: 24.0,
-          //             fontWeight: FontWeight.bold,
-          //             color: tertiaryColor,
-          //           ),
-          //         ),
-          //         Text(
-          //           "Exercise name here",
-          //           style: TextStyle(
-          //             fontSize: 24.0,
-          //             fontWeight: FontWeight.bold,
-          //             color: tertiaryColor,
-          //           ),
-          //         ),
-          //       ],
-          //     ),
-          //   ),
-          // ),
           DetectorView(
             title: 'Pose Detector',
             customPaint: _customPaint,
@@ -428,8 +448,6 @@ class _collectionDataState extends State<collectionData> {
                 duration: currentDuration,
                 initialDuration: 0,
                 controller: _controller,
-                // width: MediaQuery.of(context).size.width / 2,
-                // height: MediaQuery.of(context).size.height / 2,
                 width: MediaQuery.of(context).size.width / 4,
                 height: MediaQuery.of(context).size.height / 4,
                 ringColor: Colors.white!,
@@ -480,57 +498,63 @@ class _collectionDataState extends State<collectionData> {
             ),
           ),
           // Positioned(
-          //     top: screenHeight * .05,
-          //     right: screenWidth * .1,
-          //     child: Column(
-          //       children: [
-          //         // Text(
-          //         //   // dynamicText,
-          //         //   "avg frame",
-          //         //   style: TextStyle(
-          //         //     fontSize: 18.0,
-          //         //     fontWeight: FontWeight.w200,
-          //         //     color: tertiaryColor,
-          //         //   ),
-          //         // ),
-          //         // Text(
-          //         //   // dynamicText,
-          //         //   avgFrames.toString(),
-          //         //   style: TextStyle(
-          //         //     fontSize: 18.0,
-          //         //     fontWeight: FontWeight.w200,
-          //         //     color: tertiaryColor,
-          //         //   ),
-          //         // ),
-          //       ],
-          //     )),
+          //   bottom: screenHeight * .02,
+          //   left: screenWidth * .59,
+          //   child: description1(
+          //     DescTitle: " average",
+          //     Desc: "  ${avgFrames.toString()}",
+          //   ),
+          // ),
+          Positioned(
+            top: screenHeight * .075,
+            right: screenWidth * .075,
+            child: Row(children: [
+              Text(
+                numExec.toString(),
+                style: TextStyle(
+                  fontSize: 25.0,
+                  fontWeight: FontWeight.bold,
+                  color: tertiaryColor,
+                ),
+              ),
+              Text(
+                " / 100",
+                style: TextStyle(
+                  fontSize: 25.0,
+                  fontWeight: FontWeight.bold,
+                  color: secondaryColor,
+                ),
+              ),
+            ]),
+          ),
+
           // Positioned(
-          //   top: screenHeight * .05,
-          //   left: screenWidth * .1,
+          //   top: screenHeight * .08,
+          //   left: screenWidth * .02,
           //   child: Text(
-          //     // dynamicText,
-          //     "collecting\n   data",
+          //     "Collecting data",
           //     style: TextStyle(
-          //       fontSize: 21.0,
-          //       fontWeight: FontWeight.w200,
+          //       fontSize: 18.0,
+          //       fontWeight: FontWeight.bold,
           //       color: tertiaryColor,
           //     ),
           //   ),
           // ),
+
           Positioned(
-            top: screenHeight * .025,
-            left: screenWidth * .75,
+            top: screenHeight * .05,
+            left: screenWidth * .03,
             child: description1(
-              DescTitle: "avg frame",
+              DescTitle: " average",
               Desc: "  ${avgFrames.toString()}",
             ),
           ),
           Positioned(
-            top: screenHeight * .025,
-            left: screenWidth * .1,
+            top: screenHeight * .05,
+            left: screenWidth * .2,
             child: description1(
-              DescTitle: 'Mode:',
-              Desc: 'collecting \ndata',
+              DescTitle: " Variance",
+              Desc: "  ${variance.toString()}",
             ),
           ),
           IconButton(
@@ -539,47 +563,165 @@ class _collectionDataState extends State<collectionData> {
               color: tertiaryColor,
             ),
             onPressed: () {
-              // Your custom back button functionality goes here
               Navigator.pop(context);
             },
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Transform.translate(
-              offset: Offset(0.0, -20.0), // Adjust the y-value to move it up
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    numExec.toString(),
-                    style: TextStyle(
-                      fontSize: 30.0,
-                      fontWeight: FontWeight.w600,
-                      color: tertiaryColor,
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            secondaryColor, // Set the background color here
-                      ),
-                      onPressed: () {
-                        executionAnalysis(
-                          context,
-                          numExec,
-                          avgFrames,
-                          coordinatesData,
-                          updateProgress,
-                          _progress,
-                        );
-                      },
-                      child: Text('Done'),
-                    ),
-                  ),
-                ],
+          Positioned(
+            bottom: screenHeight * 0.025,
+            left: screenWidth * 0.05,
+            child: IconButton(
+              icon: Icon(
+                Icons.delete_forever,
+                color: secondaryColor,
+                size: screenWidth * .08, //
               ),
+              onPressed: () {
+                undoExecution(coordinatesData.length);
+              },
+            ),
+          ),
+
+          Positioned(
+              bottom: screenHeight * 0.043,
+              left: screenWidth * 0.23,
+              child: Text(
+                "1",
+                style: TextStyle(
+                  fontSize: 13.0,
+                  fontWeight: FontWeight.bold,
+                  color: secondaryColor,
+                ),
+              )),
+
+          Positioned(
+            bottom: screenHeight * 0.025,
+            left: screenWidth * 0.18,
+            child: IconButton(
+              icon: Icon(
+                Icons.restart_alt,
+                color: secondaryColor,
+                size: screenWidth * .08, //
+              ),
+              onPressed: () {
+                undoExecution(1);
+              },
+            ),
+          ),
+          Positioned(
+              bottom: screenHeight * 0.043,
+              left: screenWidth * 0.36,
+              child: Text(
+                "5",
+                style: TextStyle(
+                  fontSize: 13.0,
+                  fontWeight: FontWeight.bold,
+                  color: secondaryColor,
+                ),
+              )),
+          Positioned(
+            bottom: screenHeight * 0.025,
+            left: screenWidth * 0.31,
+            child: IconButton(
+              icon: Icon(
+                Icons.restart_alt,
+                color: secondaryColor,
+                size: screenWidth * .08, //
+              ),
+              onPressed: () {
+                undoExecution(5);
+              },
+            ),
+          ),
+          Positioned(
+            bottom: screenHeight * 0.025,
+            left: screenWidth * 0.44,
+            child: IconButton(
+              icon: Icon(
+                Icons.pause,
+                color: secondaryColor,
+                size: screenWidth * .08, //
+              ),
+              onPressed: () {
+                setState(() {
+                  nowPerforming = false;
+                });
+              },
+            ),
+          ),
+          Positioned(
+            bottom: screenHeight * 0.08,
+            left: screenWidth * 0.02,
+            child: Slider(
+              value: _sliderValue,
+              onChanged: (value) {
+                setState(() {
+                  _sliderValue = value;
+                  _sliderValue2 = _sliderValue.toInt();
+                  collectingCtrDelay = _sliderValue2;
+                  print("changed itttttttt ----> $collectingCtrDelay ");
+                });
+              },
+              min: 0.0,
+              max: 5.0,
+              activeColor: secondaryColor,
+              inactiveColor: tertiaryColor,
+            ),
+          ),
+          Positioned(
+            bottom: screenHeight * 0.095,
+            left: screenWidth * 0.45,
+            child: Container(
+              width: screenWidth * 0.06,
+              height: screenWidth * 0.06,
+              decoration: BoxDecoration(
+                color: tertiaryColor,
+                borderRadius:
+                    BorderRadius.circular(4.0), // Adjust the radius as needed
+              ),
+              child: Center(
+                child: Text(
+                  '${_sliderValue2.toString()}',
+                  style: TextStyle(color: secondaryColor),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: screenHeight * 0.08,
+            right: screenWidth * 0.35,
+            child: IconButton(
+              icon: Icon(
+                Icons.accessibility_sharp,
+                color: secondaryColor,
+                size: screenWidth * .18, //
+              ),
+              onPressed: () {
+                undoExecution(coordinatesData.length);
+              },
+            ),
+          ),
+          Positioned(
+            bottom: screenHeight * 0.02,
+            right: screenWidth * 0.02,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: secondaryColor,
+                fixedSize: Size(
+                  screenHeight * 0.11,
+                  screenHeight * 0.11,
+                ),
+              ),
+              onPressed: () {
+                executionAnalysis(
+                  context,
+                  numExec,
+                  avgFrames,
+                  coordinatesData,
+                  updateProgress,
+                  _progress,
+                );
+              },
+              child: Text('Done'),
             ),
           ),
         ],

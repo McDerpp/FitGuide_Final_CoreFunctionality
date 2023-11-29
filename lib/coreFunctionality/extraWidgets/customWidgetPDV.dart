@@ -534,11 +534,9 @@ Widget buildBackIcon(BuildContext context) {
     icon: Icon(
       Icons.arrow_back,
       color: secondaryColor,
-      size: 30.0, // Set the desired color
+      size: 30.0,
     ),
-    onPressed: () {
-      // Add navigation logic here
-    },
+    onPressed: () {},
   );
 }
 
@@ -561,3 +559,27 @@ Widget buildHelpIcon(BuildContext context) {
     },
   );
 }
+
+// Widget settings(BuildContext context) {
+//   return IconButton(
+//     icon: Icon(
+//       Icons.settings,
+//       color: secondaryColor,
+//       size: 30.0, //
+//     ),
+//     onPressed: () {
+//       showCustomDialog(context, Text('data'));
+//        Slider(
+//           value: _sliderValue,
+//           onChanged: (value) {
+//             setState(() {
+//               _sliderValue = value;
+//             });
+//           },
+//           min: 0.0,
+//           max: 100.0,
+//         ),
+//     },
+//   );
+// }
+

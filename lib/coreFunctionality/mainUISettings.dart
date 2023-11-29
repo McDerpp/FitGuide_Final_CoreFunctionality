@@ -9,6 +9,6 @@ Color tertiaryColor = const Color.fromARGB(255, 255, 255, 255);
 // =========================================================================================================================================
 
 // this is to calibrate the counter of collecting delay for getting of coordinates
-int collectingCtrDelay = 1;
+int collectingCtrDelay = 2;
 int currentDuration = 3;
 final int _duration = 10;
