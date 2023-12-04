@@ -15,7 +15,7 @@ class DetectorView extends StatefulWidget {
     this.customPaint,
     this.text,
     this.initialDetectionMode = DetectorViewMode.liveFeed,
-    this.initialCameraLensDirection = CameraLensDirection.back,
+    this.initialCameraLensDirection = CameraLensDirection.front,
     this.onCameraFeedReady,
     this.onDetectorViewModeChanged,
     this.onCameraLensDirectionChanged,
@@ -55,11 +55,12 @@ class _DetectorViewState extends State<DetectorView> {
             initialCameraLensDirection: widget.initialCameraLensDirection,
             onCameraLensDirectionChanged: widget.onCameraLensDirectionChanged,
           )
-        : GalleryView(
-            title: widget.title,
-            text: widget.text,
-            onImage: widget.onImage,
-            onDetectorViewModeChanged: _onDetectorViewModeChanged);
+        : Placeholder();
+    // : GalleryView(
+    //     title: widget.title,
+    //     text: widget.text,
+    //     onImage: widget.onImage,
+    //     onDetectorViewModeChanged: _onDetectorViewModeChanged);
   }
   // @override
   // Widget build(BuildContext context) {

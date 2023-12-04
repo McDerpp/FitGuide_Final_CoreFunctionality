@@ -196,6 +196,19 @@ class _collectionDataState extends State<collectionData> {
         if (tempPrevCurr.length > 1) {
           prevCoordinates = tempPrevCurr.elementAt(0);
           currentCoordinates = tempPrevCurr.elementAt(1);
+          print(
+              '------------------------------------movementTest[$numExec]--------------------------------------');
+
+          print(
+              "movementTest--prevCoordinates --> ${prevCoordinates.elementAt(0)}");
+          print(
+              "movementTest--currentCoordinates --> ${currentCoordinates.elementAt(0)}");
+          if (prevCoordinates.elementAt(0) - currentCoordinates.elementAt(0) ==
+              0) {
+            print("movementTest--duplicate coordinates");
+          }
+          print(
+              '---------------------------------movementTest[$numExec]-----------------------------------------');
 
           Map<String, dynamic> checkMovementIsolate = {
             'prevCoordinates': prevCoordinates,
@@ -227,32 +240,41 @@ class _collectionDataState extends State<collectionData> {
           // framesCapturedCtr = 0;
 
           if (nowPerforming == true) {
-            collectingCtr++;
-            if (collectingCtr >= collectingCtrDelay) {
-              collectingCtr = 0;
+            // collectingCtr++;
+            // if (collectingCtr >= collectingCtrDelay) {
+            //   collectingCtr = 0;
 
-              isDataCollected = true;
-              if (inferencingList.isNotEmpty) {
-                dynamicCountDownText = 'collected';
-                dynamicCountDownColor = secondaryColor;
-                coordinatesData.add(inferencingList);
-                print(
-                    "coordinatesDatatest ---- ${coordinatesData.last.length}");
-                execTotalFrames = execTotalFrames + inferencingList.length;
+            isDataCollected = true;
+            if (inferencingList.isNotEmpty) {
+              dynamicCountDownText = 'collected';
+              dynamicCountDownColor = secondaryColor;
+              coordinatesData.add(inferencingList);
+              print(
+                  'dataInHere =================================================[exec:$numExec]=======================================================================================');
+              // print(
+              //     'dataInHere ========================================================================================================================================');
 
-                // inferencingData = {
-                //   'coordinatesData': inferencingList,
-                //   'token': rootIsolateTokenInferencing,
-                // };
+              // for (List dataInHere in coordinatesData) {
+              //   print(
+              //       "dataInHere ----> ${dataInHere.elementAt(0).elementAt(0)} --> ${dataInHere.elementAt(1).elementAt(0)} -- ${dataInHere.elementAt(2).elementAt(0)} -- ${dataInHere.elementAt(3).elementAt(0)}");
+              // }
+              // print("${coordinatesData.last.elementAt(0)}");
 
-                numExec++;
+              execTotalFrames = execTotalFrames + inferencingList.length;
 
-                // queueInferencingData.add(inferencingData);
-              }
+              // inferencingData = {
+              //   'coordinatesData': inferencingList,
+              //   'token': rootIsolateTokenInferencing,
+              // };
 
-              inferencingList = [];
+              numExec++;
+
+              // queueInferencingData.add(inferencingData);
             }
+
+            inferencingList = [];
           }
+          // }
         } else if (value == false) {
           if (nowPerforming == true) {
             dynamicCountDownText = 'collecting';
@@ -545,7 +567,7 @@ class _collectionDataState extends State<collectionData> {
             top: screenHeight * .05,
             left: screenWidth * .03,
             child: description1(
-              DescTitle: " average",
+              DescTitle: " Average",
               Desc: "  ${avgFrames.toString()}",
             ),
           ),

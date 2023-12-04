@@ -15,9 +15,13 @@ class inferenceInfoPage extends StatefulWidget {
   final String bodyPartTarget;
   final String perspective;
   final String userMade;
+  final String setsNeeded;
+  final String restDuration;
 
   final String exerciseNameDescription;
   final int numberOfExecutionDescription;
+  final int restDurationDescription;
+  final int setsNeededDescription;
   final String bodyPartTargetDescription;
   final String perspectiveDescription;
   final String userMadeDescription;
@@ -34,6 +38,10 @@ class inferenceInfoPage extends StatefulWidget {
       required this.bodyPartTarget,
       required this.perspective,
       required this.userMade,
+      required this.setsNeeded,
+      required this.restDuration,
+      required this.restDurationDescription,
+      required this.setsNeededDescription,
       required this.exerciseNameDescription,
       required this.numberOfExecutionDescription,
       required this.bodyPartTargetDescription,
@@ -52,8 +60,10 @@ class _inferenceInfoPageState extends State<inferenceInfoPage> {
       context,
       MaterialPageRoute(
         builder: (context) => inferencing(
+          restDuration: widget.restDurationDescription,
+          setsNeeded: widget.setsNeededDescription,
           model: widget.inferencingModelPath,
-          nameOfExercise: widget.exerciseName,
+          nameOfExercise: widget.exerciseNameDescription,
           numberOfExecution: widget.numberOfExecutionDescription,
         ),
       ),
@@ -64,9 +74,25 @@ class _inferenceInfoPageState extends State<inferenceInfoPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PoseDetectorView(
-          isInferencing: true,
-          model: widget.inferencingModelPath,
+        builder: (context) => inferenceInfoPage(
+          restDuration: widget.restDuration,
+          restDurationDescription: widget.restDurationDescription,
+          setsNeeded: widget.setsNeeded,
+          setsNeededDescription: widget.setsNeededDescription,
+          imagePreviewPath: widget.imagePreviewPath,
+          inferencingModelPath: widget.inferencingModelPath,
+          exerciseName: widget.exerciseName,
+          exerciseNameDescription: widget.exerciseNameDescription,
+          numberOfExecution: widget.numberOfExecution,
+          numberOfExecutionDescription: widget.numberOfExecutionDescription,
+          bodyPartTarget: widget.bodyPartTarget,
+          bodyPartTargetDescription: widget.bodyPartTargetDescription,
+          perspective: widget.perspective,
+          perspectiveDescription: widget.perspectiveDescription,
+          userMade: widget.userMade,
+          userMadeDescription: widget.userMadeDescription,
+          longDescriptionTitle: widget.longDescriptionTitle,
+          longDescription: widget.longDescription,
         ),
       ),
     );
@@ -115,7 +141,7 @@ class _inferenceInfoPageState extends State<inferenceInfoPage> {
               ),
             ),
             Positioned(
-              top: screenHeight * 0.08,
+              top: screenHeight * 0.06,
               left: screenWidth * 0.05,
               child: Container(
                 width: 200, // specify the width of your container,
@@ -128,6 +154,10 @@ class _inferenceInfoPageState extends State<inferenceInfoPage> {
                     description1(
                       DescTitle: widget.numberOfExecution,
                       Desc: widget.numberOfExecutionDescription.toString(),
+                    ),
+                    description1(
+                      DescTitle: widget.setsNeeded,
+                      Desc: widget.setsNeededDescription.toString(),
                     ),
                     description1(
                       DescTitle: widget.bodyPartTarget,

@@ -25,11 +25,16 @@ class inferencing extends StatefulWidget {
   final String model;
   final String nameOfExercise;
   final int numberOfExecution;
+  final int setsNeeded;
+  final int restDuration;
+
   const inferencing({
     super.key,
     required this.model,
     required this.numberOfExecution,
     required this.nameOfExercise,
+    required this.setsNeeded,
+    required this.restDuration,
   });
 
   @override
@@ -84,6 +89,7 @@ class _inferencingState extends State<inferencing> {
   bool isDataCollected = true;
   int collectingCtr = 0;
   double _progress = 0.0;
+  int currentDuration2 = 0;
   // ---------------------collecting data mode variables----------------------------------------------------------
   // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -98,7 +104,7 @@ class _inferencingState extends State<inferencing> {
   // ---------------------countdown variables----------------------------------------------------------
 
   final CountDownController _controller = CountDownController();
-  bool nowPerforming = false;
+  int nowPerforming = 0;
   bool countDowntoPerform = false;
   bool checkCountDowntoPerform = false;
 
@@ -115,6 +121,7 @@ class _inferencingState extends State<inferencing> {
     try {
       paddingInitialize();
       modelInitialize(widget.model);
+      int currentDuration2 = 3;
     } catch (error) {
       print("error at initialization of inferencing --> $error");
     }
@@ -201,7 +208,7 @@ class _inferencingState extends State<inferencing> {
         queueNormalizeData.removeAt(0);
         tempPrevCurr.add(value);
         // inferencingList.add(value);
-        if (nowPerforming == true) {
+        if (nowPerforming == 1) {
           temp = value;
           // temp.add(value);
         }
@@ -250,7 +257,7 @@ class _inferencingState extends State<inferencing> {
           // execTotalFrames = execTotalFrames + framesCapturedCtr;
           framesCapturedCtr = 0;
 
-          if (nowPerforming == true) {
+          if (nowPerforming == 1) {
             collectingCtr++;
             if (collectingCtr >= collectingCtrDelay) {
               collectingCtr = 0;
@@ -284,7 +291,7 @@ class _inferencingState extends State<inferencing> {
             }
           }
         } else if (value == false) {
-          if (nowPerforming == true) {
+          if (nowPerforming == 1) {
             dynamicCountDownText = 'collecting';
             dynamicCountDownColor = Colors.blue;
             checkFramesCaptured = false;
@@ -303,17 +310,17 @@ class _inferencingState extends State<inferencing> {
 
         if (value == true) {
           // -----------------checking for movement before executing for collecting data--------------------------------------
-          if (nowPerforming == false) {
+          if (nowPerforming == 0) {
             if (countDowntoPerform == false) {
               _controller.start();
+              // _controller.reset();
               countDowntoPerform = true;
               dynamicCountDownText = 'Perform';
             }
           }
 
-          if (_controller.getTime().toString() == "3" &&
-              nowPerforming == false) {
-            nowPerforming = true;
+          if (_controller.getTime().toString() == "3" && nowPerforming == 0) {
+            nowPerforming = 1;
           }
           //---------------after not moving for 3 sec-------------------------
 
@@ -342,7 +349,7 @@ class _inferencingState extends State<inferencing> {
           // noMovementCtr++;
           // -----------------checking for movement before executing for collecting data--------------------------------------
 
-          if (nowPerforming == false) {
+          if (nowPerforming == 0) {
             if (countDowntoPerform == true) {
               _controller.reset();
               countDowntoPerform = false;
@@ -361,13 +368,42 @@ class _inferencingState extends State<inferencing> {
     }
 
     if (queueInferencingData.isNotEmpty) {
-      inferencingCoordinatesData(queueInferencingData.elementAt(0))
+      inferencingCoordinatesData(
+              queueInferencingData.elementAt(0), widget.model)
           .then((value) {
+        if (value == true) {
+          inferenceCorrectCtr++;
+          dynamicCountDownColor = Color.fromARGB(255, 3, 104, 8);
+        } else {
+          dynamicCountDownColor = Color.fromARGB(255, 255, 0, 0);
+        }
         queueInferencingData.removeAt(0);
         print('test');
       }).catchError((error) {
         print("Error at inferencing data ---> $error");
       });
+    }
+
+    if (inferenceCorrectCtr == widget.numberOfExecution) {
+      setState(() {
+        currentDuration2 = 30;
+      });
+      nowPerforming = 3;
+      inferenceCorrectCtr = 0;
+      dynamicCountDownText = 'rest';
+
+      _controller.start();
+    }
+
+    if (_controller.getTime().toString() == "10" && nowPerforming == 3) {
+      nowPerforming = 1;
+    }
+    if (nowPerforming == 3) {
+      String num = _controller.getTime().toString();
+      int num2 = int.parse(num);
+
+      dynamicCountDownColor =
+          Color.fromARGB(255, 193, 140 + num2 * 3, 100 + num2 * 5);
     }
 
     if (inputImage.metadata?.size != null &&
@@ -406,33 +442,33 @@ class _inferencingState extends State<inferencing> {
     return Scaffold(
       body: Stack(
         children: [
-          Align(
-            alignment: Alignment.topCenter,
-            child: Transform.translate(
-              offset: Offset(0.0, -150.0), // Adjust the y-value to move it up
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    "Now performing:",
-                    style: TextStyle(
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.bold,
-                      color: tertiaryColor,
-                    ),
-                  ),
-                  Text(
-                    "Exercise name here",
-                    style: TextStyle(
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.bold,
-                      color: tertiaryColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          //   Align(
+          //     alignment: Alignment.topCenter,
+          //     child: Transform.translate(
+          //       offset: Offset(0.0, -150.0), // Adjust the y-value to move it up
+          //       child: Column(
+          //         mainAxisAlignment: MainAxisAlignment.end,
+          //         children: [
+          //           Text(
+          //             "Now performing:",
+          //             style: TextStyle(
+          //               fontSize: 24.0,
+          //               fontWeight: FontWeight.bold,
+          //               color: tertiaryColor,
+          //             ),
+          //           ),
+          //           Text(
+          //             "Exercise name here",
+          //             style: TextStyle(
+          //               fontSize: 24.0,
+          //               fontWeight: FontWeight.bold,
+          //               color: tertiaryColor,
+          //             ),
+          //           ),
+          //         ],
+          //       ),
+          //     ),
+          //   ),
           DetectorView(
             title: 'Pose Detector',
             customPaint: _customPaint,
@@ -442,17 +478,27 @@ class _inferencingState extends State<inferencing> {
             onCameraLensDirectionChanged: (value) =>
                 _cameraLensDirection = value,
           ),
-          Align(
-            alignment: Alignment.topCenter,
-            child: FractionallySizedBox(
-              widthFactor: screenWidth,
-              heightFactor: 0.15,
-              child: Container(
-                color: mainColor,
-                // You can also add other properties to the Container widget
-              ),
+
+          Positioned(
+            left: 0,
+            top: 0,
+            child: Container(
+              color: mainColor,
+              width: screenWidth,
+              height: screenHeight * .13,
             ),
           ),
+
+          Positioned(
+            left: 0,
+            bottom: 0,
+            child: Container(
+              color: mainColor,
+              width: screenWidth,
+              height: screenHeight * .13,
+            ),
+          ),
+
           Positioned(
             left: (screenWidth * .50) -
                 ((MediaQuery.of(context).size.width / 4) +
@@ -473,7 +519,9 @@ class _inferencingState extends State<inferencing> {
           Align(
               alignment: Alignment.topCenter,
               child: CircularCountDownTimer(
-                duration: currentDuration,
+                // duration: currentDuration2,
+                duration: 5,
+
                 initialDuration: 0,
                 controller: _controller,
                 // width: MediaQuery.of(context).size.width / 2,
@@ -507,7 +555,7 @@ class _inferencingState extends State<inferencing> {
                   print('Countdown Changed $timeStamp');
                 },
                 timeFormatterFunction: (defaultFormatterFunction, duration) {
-                  if (nowPerforming == true) {
+                  if (nowPerforming == 1 || nowPerforming == 3) {
                     return dynamicCountDownText;
                   } else {
                     return Function.apply(defaultFormatterFunction, [duration]);
@@ -517,31 +565,63 @@ class _inferencingState extends State<inferencing> {
               // countdownTimer(context, dynamicCountDownText,
               //     dynamicCountDownColor, _controller)
               ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: FractionallySizedBox(
-              widthFactor: screenWidth,
-              heightFactor: 0.15,
-              child: Container(
-                color: mainColor,
+          // Align(
+          //   alignment: Alignment.bottomCenter,
+          //   child: FractionallySizedBox(
+          //     widthFactor: screenWidth,
+          //     heightFactor: 0.15,
+          //     child: Container(
+          //       color: mainColor,
+          //     ),
+          //   ),
+          // ),
+          Positioned(
+            bottom: screenHeight * .04,
+            right: screenWidth * .28,
+            child: Text(
+              " ${inferenceCorrectCtr.toString()}",
+              style: TextStyle(
+                fontSize: 40.0,
+                fontWeight: FontWeight.w500,
+                color: tertiaryColor,
+              ),
+            ),
+          ),
+
+          Positioned(
+            bottom: screenHeight * .04,
+            right: screenWidth * .08,
+            child: Text(
+              " / ${widget.numberOfExecution.toString()}",
+              style: TextStyle(
+                fontSize: 40.0,
+                fontWeight: FontWeight.w500,
+                color: secondaryColor,
               ),
             ),
           ),
           Positioned(
-            top: screenHeight * .025,
-            left: screenWidth * .75,
-            child: description1(
-              DescTitle: 'Execution:',
-              Desc:
-                  " ${inferenceCorrectCtr.toString()} / ${widget.numberOfExecution.toString()}",
+            bottom: screenHeight * .08,
+            left: screenWidth * .06,
+            child: Text(
+              "Exercise:",
+              style: TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.w500,
+                color: secondaryColor,
+              ),
             ),
           ),
           Positioned(
-            top: screenHeight * .025,
-            left: screenWidth * .1,
-            child: description1(
-              DescTitle: 'Exercise:',
-              Desc: widget.nameOfExercise,
+            bottom: screenHeight * .04,
+            left: screenWidth * .06,
+            child: Text(
+              widget.nameOfExercise,
+              style: TextStyle(
+                fontSize: 24.0,
+                fontWeight: FontWeight.w300,
+                color: tertiaryColor,
+              ),
             ),
           ),
           IconButton(

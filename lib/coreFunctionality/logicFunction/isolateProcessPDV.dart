@@ -18,6 +18,7 @@ void paddingInitialize() {
 }
 
 Future<void> modelInitialize(String modelPath) async {
+  print("INITIALIZED");
   final head = await tfl.Interpreter.fromAsset(modelPath);
 }
 
@@ -36,8 +37,10 @@ List<List<double>> padding(List<List<double>> input, int requiredlength) {
   return result;
 }
 
-Future<bool> inferencingCoordinatesData(Map<String, dynamic> inputs) async {
-  print("entering inferencing");
+Future<bool> inferencingCoordinatesData(
+    Map<String, dynamic> inputs, String modelPath) async {
+  final head = await tfl.Interpreter.fromAsset(modelPath);
+
   bool isCorrect = false;
   List<List<double>> tempArray = [];
 
@@ -67,8 +70,11 @@ Future<bool> inferencingCoordinatesData(Map<String, dynamic> inputs) async {
       print("head.runInference(coordinates); error! -> $error");
     }
   }
-
-  return isCorrect;
+  if (output.elementAt(0).elementAt(0) >= .70) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 List<double> coordinatesRelativeBoxIsolate(Map<String, dynamic> inputs) {
