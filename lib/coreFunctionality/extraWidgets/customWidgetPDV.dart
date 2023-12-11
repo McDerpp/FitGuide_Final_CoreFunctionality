@@ -229,7 +229,10 @@ Widget countdownTimer(
   CountDownController _controller,
 ) {
   final CountDownController _controller = CountDownController();
-  int currentDuration = 3;
+  // int currentDuration = 3;
+  double screenWidth = MediaQuery.of(context).size.width;
+  double screenHeight = MediaQuery.of(context).size.height;
+  double textSizeModif = (screenHeight + screenWidth) * textAdaptModifier;
 
   return (CircularCountDownTimer(
     duration: currentDuration,
@@ -248,7 +251,10 @@ Widget countdownTimer(
     strokeWidth: 20.0,
     strokeCap: StrokeCap.round,
     textStyle: TextStyle(
-        fontSize: 20.0, color: Colors.white, fontWeight: FontWeight.bold),
+      fontSize: 20.0 * textSizeModif,
+      color: Colors.white,
+      fontWeight: FontWeight.w400,
+    ),
     textFormat: CountdownTextFormat.S,
     isReverse: false,
     isReverseAnimation: false,
@@ -328,6 +334,45 @@ void executionAnalysis(
     ),
   );
 }
+
+// void ignoreCoordinatesPopOutBox(
+//   BuildContext context,
+//   // List<dynamic> coordinatesData,
+// ) {
+//   double screenWidth = MediaQuery.of(context).size.width;
+//   double screenHeight = MediaQuery.of(context).size.height;
+//   double textSizeModif = (screenHeight + screenWidth) * textAdaptModifier;
+//   return showCustomDialog(
+//       context,
+//       Stack(
+//         children: [
+//           IconButton(
+//             icon: Icon(
+//               Icons.accessibility_sharp,
+//               color: secondaryColor,
+//               size: screenWidth * .45, //
+//             ),
+//             onPressed: () {},
+//           ),
+//           Center(
+//             child: ToggleButtons(
+//               children: <Widget>[
+//                 Icon(Icons.format_bold),
+//                 Icon(Icons.format_italic),
+//                 Icon(Icons.format_underline),
+//               ],
+//               onPressed: (int index) {
+//                 setState(() {
+//                   // Toggle the state of the button at the specified index
+//                   isSelected[index] = !isSelected[index];
+//                 });
+//               },
+//               isSelected: isSelected,
+//             ),
+//           ),
+//         ],
+//       ));
+// }
 
 void loadingBoxTranslating(
   BuildContext context,
@@ -443,7 +488,11 @@ void sendingToTrain(BuildContext context) {
 Widget description1({
   required DescTitle,
   required String Desc,
+  required BuildContext context,
 }) {
+  double screenWidth = MediaQuery.of(context).size.width;
+  double screenHeight = MediaQuery.of(context).size.height;
+  double textSizeModif = (screenHeight + screenWidth) * textAdaptModifier;
   return Padding(
     padding: EdgeInsets.only(top: 15.0),
     child: Container(
@@ -454,8 +503,8 @@ Widget description1({
           Text(
             DescTitle,
             style: TextStyle(
-              fontSize: 13.0,
-              fontWeight: FontWeight.bold,
+              fontSize: 13.0 * textSizeModif,
+              fontWeight: FontWeight.w400,
               color: secondaryColor,
             ),
             maxLines: 3,
@@ -468,8 +517,8 @@ Widget description1({
             child: Text(
               Desc,
               style: TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.bold,
+                fontSize: 18.0 * textSizeModif,
+                fontWeight: FontWeight.w500,
                 color: tertiaryColor,
               ),
               maxLines: 3,
@@ -490,6 +539,8 @@ Widget longDescription({
 }) {
   double screenWidth = MediaQuery.of(context).size.width;
   double screenHeight = MediaQuery.of(context).size.height;
+  double textSizeModif = (screenHeight + screenWidth) * textAdaptModifier;
+
   return Padding(
     padding: EdgeInsets.only(top: 8.0),
     child: Container(
@@ -500,7 +551,7 @@ Widget longDescription({
           Text(
             DescTitle,
             style: TextStyle(
-              fontSize: 15.0,
+              fontSize: 15.0 * textSizeModif,
               fontWeight: FontWeight.bold,
               color: secondaryColor,
             ),
@@ -508,13 +559,13 @@ Widget longDescription({
             overflow: TextOverflow.ellipsis,
             softWrap: true,
           ),
-          SizedBox(height: 3.0), // Add some spacing between the texts
+          const SizedBox(height: 3.0), //
           Padding(
-            padding: EdgeInsets.only(left: 5.0),
+            padding: const EdgeInsets.only(left: 5.0),
             child: Text(
               longDesc,
               style: TextStyle(
-                fontSize: 12.0,
+                fontSize: 12.0 * textSizeModif,
                 fontWeight: FontWeight.bold,
                 color: tertiaryColor,
               ),
@@ -560,6 +611,53 @@ Widget buildHelpIcon(BuildContext context) {
   );
 }
 
+// Future popOutDialogUpdating() {
+//   return showDialog(
+//     context: context,
+//     builder: (context) {
+//       String contentText = "Content of Dialog";
+//       return StatefulBuilder(
+//         builder: (context, setState) {
+//           return AlertDialog(
+//             title: Text("Title of Dialog"),
+//             content: Text(contentText),
+//             actions: <Widget>[
+//               TextButton(
+//                 onPressed: () => Navigator.pop(context),
+//                 child: Text("Cancel"),
+//               ),
+//               ElevatedButton(
+//                 style: ElevatedButton.styleFrom(
+//                   backgroundColor: headColor,
+//                   fixedSize: Size(
+//                     screenHeight * 0.15,
+//                     screenHeight * 0.05,
+//                   ),
+//                 ),
+//                 onPressed: () {
+//                   print("HEAD PRESSED!");
+//                   setState(() {
+//                     headColor = Colors.deepOrange;
+//                   });
+//                 },
+//                 child: Text('Head'),
+//               ),
+//               TextButton(
+//                 onPressed: () {
+//                   setState(() {
+//                     contentText = "Changed Content of Dialog";
+//                   });
+//                 },
+//                 child: Text("Change"),
+//               ),
+//             ],
+//           );
+//         },
+//       );
+//     },
+//   );
+// }
+
 // Widget settings(BuildContext context) {
 //   return IconButton(
 //     icon: Icon(
@@ -583,3 +681,262 @@ Widget buildHelpIcon(BuildContext context) {
 //   );
 // }
 
+
+
+
+//  await openDialog(
+                //   context,
+                //   Stack(
+                //     children: [
+                //       Positioned(
+                //         left: (screenWidth * 0.7) * .1,
+                //         bottom: (screenHeight * 0.35),
+                //         child: IconButton(
+                //           icon: Icon(
+                //             Icons.accessibility_sharp,
+                //             color: secondaryColor,
+                //             size: screenWidth * .50, //
+                //           ),
+                //           onPressed: () {},
+                //         ),
+                //       ),
+                //       // ----------------------HEAD------------------------------
+                //       Positioned(
+                //         top: screenHeight * 0.5 * 0.02,
+                //         right: screenWidth * 0.7 * 0.37,
+                //         child: ElevatedButton(
+                //           style: ElevatedButton.styleFrom(
+                //             backgroundColor: headColor,
+                //             fixedSize: Size(
+                //               screenHeight * 0.15,
+                //               screenHeight * 0.05,
+                //             ),
+                //           ),
+                //           onPressed: () {
+                //             print("HEAD PRESSED!");
+                //             setState(() {
+                //               headColor = Colors.deepOrange;
+                //             });
+                //           },
+                //           child: Text('Head'),
+                //         ),
+                //       ),
+
+                //       // ----------------------BODY------------------------------
+
+                //       Positioned(
+                //         top: screenHeight * 0.5 * 0.5,
+                //         left: screenWidth * .7 * .08,
+                //         child: ElevatedButton(
+                //           style: ElevatedButton.styleFrom(
+                //             backgroundColor: bodyColor,
+                //             fixedSize: Size(
+                //               screenHeight * 0.15,
+                //               screenHeight * 0.05,
+                //             ),
+                //           ),
+                //           onPressed: () {},
+                //           child: Text('Body'),
+                //         ),
+                //       ),
+                //       // ----------------------LEFT_ARM------------------------------
+
+                //       Positioned(
+                //         top: screenHeight * 0.5 * 0.2,
+                //         right: screenWidth * .7 * .025,
+                //         child: ElevatedButton(
+                //           style: ElevatedButton.styleFrom(
+                //             backgroundColor: leftArmColor,
+                //             fixedSize: Size(
+                //               screenHeight * 0.15,
+                //               screenHeight * 0.05,
+                //             ),
+                //           ),
+                //           onPressed: () {},
+                //           child: Text('Left Arm'),
+                //         ),
+                //       ),
+                //       // ----------------------RIGHT_ARM------------------------------
+
+                //       Positioned(
+                //         top: screenHeight * 0.5 * 0.2,
+                //         left: screenWidth * .7 * .025,
+                //         child: ElevatedButton(
+                //           style: ElevatedButton.styleFrom(
+                //             backgroundColor: rightArmColor,
+                //             fixedSize: Size(
+                //               screenHeight * 0.15,
+                //               screenHeight * 0.05,
+                //             ),
+                //           ),
+                //           onPressed: () {},
+                //           child: Text('Right Arm'),
+                //         ),
+                //       ),
+                //       // ----------------------LEFT_LEG------------------------------
+
+                //       Positioned(
+                //         bottom: screenHeight * 0.5 * 0.2,
+                //         right: screenWidth * .7 * .01,
+                //         child: ElevatedButton(
+                //           style: ElevatedButton.styleFrom(
+                //             backgroundColor: leftLegColor,
+                //             fixedSize: Size(
+                //               screenHeight * 0.15,
+                //               screenHeight * 0.05,
+                //             ),
+                //           ),
+                //           onPressed: () {},
+                //           child: Text('Left Leg'),
+                //         ),
+                //       ),
+                //       // ----------------------RIGHT_LEG------------------------------
+
+                //       Positioned(
+                //         bottom: screenHeight * 0.5 * 0.2,
+                //         left: screenWidth * .7 * .01,
+                //         child: ElevatedButton(
+                //           style: ElevatedButton.styleFrom(
+                //             backgroundColor: rightLegColor,
+                //             fixedSize: Size(
+                //               screenHeight * 0.15,
+                //               screenHeight * 0.05,
+                //             ),
+                //           ),
+                //           onPressed: () {},
+                //           child: Text('Right Leg'),
+                //         ),
+                //       ),
+                //     ],
+                //   ),
+                // );
+                // setState(() {});
+                // showCustomDialog(
+                //   context,
+                //   heightMultiplier: 0.5,
+                //   Stack(
+                //     children: [
+                //       Positioned(
+                //         left: (screenWidth * 0.7) * .1,
+                //         bottom: (screenHeight * 0.35),
+                //         child: IconButton(
+                //           icon: Icon(
+                //             Icons.accessibility_sharp,
+                //             color: secondaryColor,
+                //             size: screenWidth * .50, //
+                //           ),
+                //           onPressed: () {},
+                //         ),
+                //       ),
+                //       // ----------------------HEAD------------------------------
+                //       Positioned(
+                //         top: screenHeight * 0.5 * 0.02,
+                //         right: screenWidth * 0.7 * 0.37,
+                //         child: ElevatedButton(
+                //           style: ElevatedButton.styleFrom(
+                //             backgroundColor: headColor,
+                //             fixedSize: Size(
+                //               screenHeight * 0.15,
+                //               screenHeight * 0.05,
+                //             ),
+                //           ),
+                //           onPressed: () {
+                //             print("HEAD PRESSED!");
+                //             setState(() {
+                //               headColor = Colors.deepOrange;
+                //             });
+                //           },
+                //           child: Text('Head'),
+                //         ),
+                //       ),
+                //       // ----------------------BODY------------------------------
+
+                //       Positioned(
+                //         top: screenHeight * 0.5 * 0.5,
+                //         left: screenWidth * .7 * .08,
+                //         child: ElevatedButton(
+                //           style: ElevatedButton.styleFrom(
+                //             backgroundColor: bodyColor,
+                //             fixedSize: Size(
+                //               screenHeight * 0.15,
+                //               screenHeight * 0.05,
+                //             ),
+                //           ),
+                //           onPressed: () {},
+                //           child: Text('Body'),
+                //         ),
+                //       ),
+                //       // ----------------------LEFT_ARM------------------------------
+
+                //       Positioned(
+                //         top: screenHeight * 0.5 * 0.2,
+                //         right: screenWidth * .7 * .025,
+                //         child: ElevatedButton(
+                //           style: ElevatedButton.styleFrom(
+                //             backgroundColor: leftArmColor,
+                //             fixedSize: Size(
+                //               screenHeight * 0.15,
+                //               screenHeight * 0.05,
+                //             ),
+                //           ),
+                //           onPressed: () {},
+                //           child: Text('Left Arm'),
+                //         ),
+                //       ),
+                //       // ----------------------RIGHT_ARM------------------------------
+
+                //       Positioned(
+                //         top: screenHeight * 0.5 * 0.2,
+                //         left: screenWidth * .7 * .025,
+                //         child: ElevatedButton(
+                //           style: ElevatedButton.styleFrom(
+                //             backgroundColor: rightArmColor,
+                //             fixedSize: Size(
+                //               screenHeight * 0.15,
+                //               screenHeight * 0.05,
+                //             ),
+                //           ),
+                //           onPressed: () {},
+                //           child: Text('Right Arm'),
+                //         ),
+                //       ),
+                //       // ----------------------LEFT_LEG------------------------------
+
+                //       Positioned(
+                //         bottom: screenHeight * 0.5 * 0.2,
+                //         right: screenWidth * .7 * .01,
+                //         child: ElevatedButton(
+                //           style: ElevatedButton.styleFrom(
+                //             backgroundColor: leftLegColor,
+                //             fixedSize: Size(
+                //               screenHeight * 0.15,
+                //               screenHeight * 0.05,
+                //             ),
+                //           ),
+                //           onPressed: () {},
+                //           child: Text('Left Leg'),
+                //         ),
+                //       ),
+                //       // ----------------------RIGHT_LEG------------------------------
+
+                //       Positioned(
+                //         bottom: screenHeight * 0.5 * 0.2,
+                //         left: screenWidth * .7 * .01,
+                //         child: ElevatedButton(
+                //           style: ElevatedButton.styleFrom(
+                //             backgroundColor: rightLegColor,
+                //             fixedSize: Size(
+                //               screenHeight * 0.15,
+                //               screenHeight * 0.05,
+                //             ),
+                //           ),
+                //           onPressed: () {},
+                //           child: Text('Right Leg'),
+                //         ),
+                //       ),
+                //     ],
+                //   ),
+                // );
+
+
+                

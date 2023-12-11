@@ -45,6 +45,7 @@ class _collectionDataState extends State<collectionData> {
   RootIsolateToken rootIsolateTokenNormalization = RootIsolateToken.instance!;
   RootIsolateToken rootIsolateTokenNoMovement = RootIsolateToken.instance!;
   RootIsolateToken rootIsolateTokenInferencing = RootIsolateToken.instance!;
+  RootIsolateToken rootIsolateTokenTranslating = RootIsolateToken.instance!;
 
   List<double> prevCoordinates = [];
   List<double> currentCoordinates = [];
@@ -88,6 +89,24 @@ class _collectionDataState extends State<collectionData> {
   double variance = 0;
   int numFrameVariance = 5;
   int collectingCtrDelay = 0;
+
+  Color headColor = secondaryColor;
+  Color leftArmColor = secondaryColor;
+  Color rightArmColor = secondaryColor;
+  Color leftLegColor = secondaryColor;
+  Color rightLegColor = secondaryColor;
+  Color bodyColor = secondaryColor;
+  List<int> ignoreCoordinatesInitialized = [];
+
+// [head,leftArm,rightArm,leftLeg,rightLeg,body]
+  List<bool> igrnoreCoordinatesList = [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ];
 
   // ---------------------collecting data mode variables----------------------------------------------------------
 // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -172,8 +191,8 @@ class _collectionDataState extends State<collectionData> {
       Map<String, dynamic> dataNormalizationIsolate = {
         'inputImage': poses.first.landmarks.values,
         'token': rootIsolateTokenNormalization,
+        'coordinatesIgnore': ignoreCoordinatesInitialized,
       };
-
       queueNormalizeData.add(dataNormalizationIsolate);
     } catch (error) {
       print("error at proces image ---> $error");
@@ -392,6 +411,7 @@ class _collectionDataState extends State<collectionData> {
         numExec--;
       }
     }
+
     setState(() {
       nowPerforming = false;
 
@@ -400,6 +420,32 @@ class _collectionDataState extends State<collectionData> {
       resultAvgFrames = avgFrames.toStringAsFixed(2);
       avgFrames = double.parse(resultAvgFrames);
     });
+  }
+
+  void initiateIgnoreCoordinates() {
+    ignoreCoordinatesInitialized.clear();
+    List<int> head = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    List<int> body = [];
+    List<int> leftArm = [11, 13, 25, 21, 17, 19];
+    List<int> rightArm = [12, 14, 16, 18, 20, 22];
+    List<int> leftLeg = [23, 25, 27, 29, 31];
+    List<int> rightLeg = [24, 26, 28, 32, 30];
+
+    if (igrnoreCoordinatesList.elementAt(0) == true) {
+      ignoreCoordinatesInitialized.addAll(head);
+    }
+    if (igrnoreCoordinatesList.elementAt(1) == true) {
+      ignoreCoordinatesInitialized.addAll(leftArm);
+    }
+    if (igrnoreCoordinatesList.elementAt(2) == true) {
+      ignoreCoordinatesInitialized.addAll(rightArm);
+    }
+    if (igrnoreCoordinatesList.elementAt(3) == true) {
+      ignoreCoordinatesInitialized.addAll(leftLeg);
+    }
+    if (igrnoreCoordinatesList.elementAt(4) == true) {
+      ignoreCoordinatesInitialized.addAll(rightLeg);
+    }
   }
 
   void calculateVariance(int numFrameGroup) {
@@ -420,10 +466,67 @@ class _collectionDataState extends State<collectionData> {
     }
   }
 
+  void simulateCollectData() {
+    print("simulating collection of data");
+    for (int ctr = 0; ctr <= 75; ctr++) {
+      inferencingList = [];
+      for (int ctr1 = 0; ctr1 <= 10; ctr1++) {
+        temp = [];
+        for (int ctr2 = 0; ctr2 <= 66; ctr2++) {
+          temp.add(0.1111111111);
+        }
+        inferencingList.add(temp);
+      }
+      print("adding --> $numExec");
+      coordinatesData.add(inferencingList);
+      setState(() {
+        numExec++;
+      });
+    }
+    print("translating to txt");
+    Map<String, dynamic> translatingIsolate = {
+      'coordinates': coordinatesData,
+      'token': rootIsolateTokenTranslating,
+    };
+
+    // compute(translateCollectedDatatoTxt2, translatingIsolate);
+    print("translated");
+  }
+
+  bool isChecked = false;
+
+  Future openDialog(BuildContext context, Widget content) => showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('setState in Dialog?'),
+          content: content,
+          actions: [
+            TextButton(
+              child: Text('SUBMIT'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        ),
+      );
+
+  Color? coordinatesIgnoreState(int index) {
+    undoExecution(coordinatesData.length);
+
+    if (igrnoreCoordinatesList.elementAt(index) == false) {
+      igrnoreCoordinatesList[index] = true;
+      return Colors.purple[900];
+    } else {
+      igrnoreCoordinatesList[index] = false;
+      return secondaryColor;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
+    double textSizeModif = (screenHeight + screenWidth) * textAdaptModifier;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -481,7 +584,7 @@ class _collectionDataState extends State<collectionData> {
                 strokeWidth: 20.0,
                 strokeCap: StrokeCap.round,
                 textStyle: TextStyle(
-                    fontSize: 20.0,
+                    fontSize: 20.0 * textSizeModif,
                     color: Colors.white,
                     fontWeight: FontWeight.bold),
                 textFormat: CountdownTextFormat.S,
@@ -528,57 +631,91 @@ class _collectionDataState extends State<collectionData> {
           //   ),
           // ),
           Positioned(
-            top: screenHeight * .075,
-            right: screenWidth * .075,
-            child: Row(children: [
-              Text(
-                numExec.toString(),
-                style: TextStyle(
-                  fontSize: 25.0,
-                  fontWeight: FontWeight.bold,
-                  color: tertiaryColor,
+            top: screenHeight * 0.06,
+            right: screenWidth * 0.02,
+            child: Row(
+              children: [
+                Text(
+                  numExec.toString(),
+                  style: TextStyle(
+                    fontSize: 35.0 * textSizeModif,
+                    fontWeight: FontWeight.w400,
+                    color: tertiaryColor,
+                  ),
                 ),
-              ),
-              Text(
-                " / 100",
-                style: TextStyle(
-                  fontSize: 25.0,
-                  fontWeight: FontWeight.bold,
-                  color: secondaryColor,
+                Text(
+                  "/100",
+                  style: TextStyle(
+                    fontSize: 35.0 * textSizeModif,
+                    fontWeight: FontWeight.w400,
+                    color: secondaryColor,
+                  ),
                 ),
-              ),
-            ]),
+              ],
+            ),
+          ),
+
+          Positioned(
+            top: screenHeight * .05,
+            left: screenWidth * .02,
+            child: Row(
+              children: [
+                Column(
+                  children: [
+                    Text(
+                      "Average",
+                      style: TextStyle(
+                        fontSize: 15.0 * textSizeModif,
+                        fontWeight: FontWeight.w400,
+                        color: secondaryColor,
+                      ),
+                    ),
+                    SizedBox(height: 10.0), // Add a vertical space
+                    Text(
+                      "$avgFrames",
+                      style: TextStyle(
+                        fontSize: 23.0 * textSizeModif,
+                        fontWeight: FontWeight.w400,
+                        color: tertiaryColor,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(width: 20.0), // Add a horizontal space
+                Column(
+                  children: [
+                    Text(
+                      "Variance",
+                      style: TextStyle(
+                        fontSize: 15.0 * textSizeModif,
+                        fontWeight: FontWeight.w400,
+                        color: secondaryColor,
+                      ),
+                    ),
+                    SizedBox(height: 10.0), // Add a vertical space
+                    Text(
+                      "$variance",
+                      style: TextStyle(
+                        fontSize: 23.0 * textSizeModif,
+                        fontWeight: FontWeight.w400,
+                        color: tertiaryColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
 
           // Positioned(
-          //   top: screenHeight * .08,
-          //   left: screenWidth * .02,
-          //   child: Text(
-          //     "Collecting data",
-          //     style: TextStyle(
-          //       fontSize: 18.0,
-          //       fontWeight: FontWeight.bold,
-          //       color: tertiaryColor,
-          //     ),
+          //   top: screenHeight * .05,
+          //   left: screenWidth * .2,
+          //   child: description1(
+          //     DescTitle: " Variance",
+          //     Desc: "  ${variance.toString()}",
+          //     context: context,
           //   ),
           // ),
-
-          Positioned(
-            top: screenHeight * .05,
-            left: screenWidth * .03,
-            child: description1(
-              DescTitle: " Average",
-              Desc: "  ${avgFrames.toString()}",
-            ),
-          ),
-          Positioned(
-            top: screenHeight * .05,
-            left: screenWidth * .2,
-            child: description1(
-              DescTitle: " Variance",
-              Desc: "  ${variance.toString()}",
-            ),
-          ),
           IconButton(
             icon: Icon(
               Icons.arrow_back,
@@ -609,8 +746,8 @@ class _collectionDataState extends State<collectionData> {
               child: Text(
                 "1",
                 style: TextStyle(
-                  fontSize: 13.0,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 13.0 * textSizeModif,
+                  fontWeight: FontWeight.w400,
                   color: secondaryColor,
                 ),
               )),
@@ -635,8 +772,8 @@ class _collectionDataState extends State<collectionData> {
               child: Text(
                 "5",
                 style: TextStyle(
-                  fontSize: 13.0,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 13.0 * textSizeModif,
+                  fontWeight: FontWeight.w400,
                   color: secondaryColor,
                 ),
               )),
@@ -672,7 +809,7 @@ class _collectionDataState extends State<collectionData> {
           ),
           Positioned(
             bottom: screenHeight * 0.08,
-            left: screenWidth * 0.02,
+            left: screenWidth * 0.04,
             child: Slider(
               value: _sliderValue,
               onChanged: (value) {
@@ -708,6 +845,7 @@ class _collectionDataState extends State<collectionData> {
               ),
             ),
           ),
+
           Positioned(
             bottom: screenHeight * 0.08,
             right: screenWidth * 0.35,
@@ -718,8 +856,211 @@ class _collectionDataState extends State<collectionData> {
                 size: screenWidth * .18, //
               ),
               onPressed: () {
-                undoExecution(coordinatesData.length);
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return StatefulBuilder(
+                      builder: (context, setState) {
+                        return AlertDialog(
+                          // content: Text(contentText),
+                          actions: <Widget>[
+                            Align(
+                              alignment: Alignment.topLeft,
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.arrow_back,
+                                  size: screenHeight * .05,
+                                  color: secondaryColor,
+                                ),
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ),
+                            Container(
+                              width: screenWidth * 0.80,
+                              height: screenHeight * 0.5,
+                              child: Stack(
+                                children: [
+                                  // ---------------------------------------------[head]
+                                  Positioned(
+                                    left: screenWidth * .25,
+                                    top: screenHeight * 0.0,
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: headColor,
+                                        fixedSize: Size(
+                                          screenHeight * 0.15,
+                                          screenHeight * 0.05,
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          headColor =
+                                              coordinatesIgnoreState(0)!;
+                                          initiateIgnoreCoordinates();
+                                        });
+                                      },
+                                      child: Text('Head'),
+                                    ),
+                                  ),
+                                  // ---------------------------------------------[body]
+
+                                  Positioned(
+                                    left: screenWidth * 0.02,
+                                    top: screenHeight * 0.2,
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: bodyColor,
+                                        fixedSize: Size(
+                                          screenHeight * 0.15,
+                                          screenHeight * 0.05,
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          bodyColor =
+                                              coordinatesIgnoreState(5)!;
+                                          initiateIgnoreCoordinates();
+                                        });
+                                      },
+                                      child: Text('body'),
+                                    ),
+                                  ),
+                                  // ---------------------------------------------[right arm]
+
+                                  Positioned(
+                                    left: screenWidth * 0.02,
+                                    top: screenHeight * 0.08,
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: rightArmColor,
+                                        fixedSize: Size(
+                                          screenHeight * 0.15,
+                                          screenHeight * 0.05,
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          rightArmColor =
+                                              coordinatesIgnoreState(2)!;
+                                          initiateIgnoreCoordinates();
+                                        });
+                                      },
+                                      child: Text('Right Arm'),
+                                    ),
+                                  ),
+                                  // ---------------------------------------------[left arm]
+
+                                  Positioned(
+                                    right: screenWidth * 0.02,
+                                    top: screenHeight * 0.08,
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: leftArmColor,
+                                        fixedSize: Size(
+                                          screenHeight * 0.15,
+                                          screenHeight * 0.05,
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          leftArmColor =
+                                              coordinatesIgnoreState(1)!;
+                                          initiateIgnoreCoordinates();
+                                        });
+                                      },
+                                      child: Text('Left Arm'),
+                                    ),
+                                  ),
+                                  // ---------------------------------------------[right leg]
+
+                                  Positioned(
+                                    left: screenWidth * 0.02,
+                                    bottom: screenHeight * 0.08,
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: rightLegColor,
+                                        fixedSize: Size(
+                                          screenHeight * 0.15,
+                                          screenHeight * 0.05,
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          rightLegColor =
+                                              coordinatesIgnoreState(4)!;
+                                          initiateIgnoreCoordinates();
+                                        });
+                                      },
+                                      child: Text('Right Leg'),
+                                    ),
+                                  ),
+                                  // ---------------------------------------------[left leg]
+
+                                  Positioned(
+                                    right: screenWidth * 0.02,
+                                    bottom: screenHeight * 0.08,
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: leftLegColor,
+                                        fixedSize: Size(
+                                          screenHeight * 0.15,
+                                          screenHeight * 0.05,
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          leftLegColor =
+                                              coordinatesIgnoreState(3)!;
+                                          initiateIgnoreCoordinates();
+                                        });
+                                      },
+                                      child: Text('Left Leg'),
+                                    ),
+                                  ),
+                                  // ---------------------------------------------[----]
+
+                                  Positioned(
+                                    left: screenWidth * .1,
+                                    bottom: screenHeight * 0.35,
+                                    child: IconButton(
+                                      icon: Icon(
+                                        Icons.accessibility_sharp,
+                                        color: secondaryColor,
+                                        size: screenWidth * .50, //
+                                      ),
+                                      onPressed: () {},
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                );
               },
+            ),
+          ),
+
+          Positioned(
+            bottom: screenHeight * 0.5,
+            right: screenWidth * 0.5,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: secondaryColor,
+                fixedSize: Size(
+                  screenHeight * 0.11,
+                  screenHeight * 0.11,
+                ),
+              ),
+              onPressed: () {
+                simulateCollectData();
+              },
+              child: Text('Simulate'),
             ),
           ),
           Positioned(

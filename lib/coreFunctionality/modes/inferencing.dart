@@ -89,13 +89,16 @@ class _inferencingState extends State<inferencing> {
   bool isDataCollected = true;
   int collectingCtr = 0;
   double _progress = 0.0;
-  int currentDuration2 = 0;
+  int currentDuration2 = 5;
+  List<int> igrnoreCoordinatesList = [];
+
   // ---------------------collecting data mode variables----------------------------------------------------------
   // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
   // ---------------------inferencing data mode variables----------------------------------------------------------
   int inferenceCorrectCtr = 0;
+  int setsAchieved = 0;
 
   // ---------------------inferencing data mode variables----------------------------------------------------------
 // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -104,6 +107,8 @@ class _inferencingState extends State<inferencing> {
   // ---------------------countdown variables----------------------------------------------------------
 
   final CountDownController _controller = CountDownController();
+  final CountDownController _controller2 = CountDownController();
+
   int nowPerforming = 0;
   bool countDowntoPerform = false;
   bool checkCountDowntoPerform = false;
@@ -187,13 +192,10 @@ class _inferencingState extends State<inferencing> {
       Map<String, dynamic> dataNormalizationIsolate = {
         'inputImage': poses.first.landmarks.values,
         'token': rootIsolateTokenNormalization,
+        'coordinatesIgnore' :igrnoreCoordinatesList,
+
       };
-      print('relative attempt1123231 --> ${poses.first.landmarks.values}');
       queueNormalizeData.add(dataNormalizationIsolate);
-      print(
-          'relative attempt11 --> ${queueNormalizeData.elementAt(0)['inputImage']}');
-      print(
-          'relative attempt222 --> ${queueNormalizeData.elementAt(0)['token']}');
     } catch (error) {
       print("error at proces image ---> $error");
     }
@@ -228,17 +230,7 @@ class _inferencingState extends State<inferencing> {
         print("Error at coordinate relative ---> $error");
       });
     }
-    // relativeBoxIsolateFunction(
-    //   queueNormalizeData: queueNormalizeData,
-    //   tempPrevCurr: tempPrevCurr,
-    //   nowPerforming: nowPerforming,
-    //   prevCoordinates: prevCoordinates,
-    //   temp: temp,
-    //   currentCoordinates: currentCoordinates,
-    //   rootIsolateTokenNoMovement: rootIsolateTokenNoMovement,
-    //   queueMovementData: queueNormalizeData,
-    //   checkMovementIsolate: checkMovementIsolate,
-    // );
+
 // // ==================================[isolate function forcoordinatesRelativeBoxIsolate ]==================================
 // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -248,29 +240,25 @@ class _inferencingState extends State<inferencing> {
       compute(checkMovement, queueMovementData.elementAt(0))
           .then((value) async {
         queueMovementData.removeAt(0);
-        print("isolateNoMovementResult ---> $value");
 
         if (value == true && checkFramesCaptured == false) {
           checkFramesCaptured = true;
           framesCapturedCtr++;
-          print("frames captured --> $framesCapturedCtr");
-          // execTotalFrames = execTotalFrames + framesCapturedCtr;
+
           framesCapturedCtr = 0;
 
           if (nowPerforming == 1) {
             collectingCtr++;
             if (collectingCtr >= collectingCtrDelay) {
               collectingCtr = 0;
-              print("stopping");
+
               isDataCollected = true;
               if (inferencingList.isNotEmpty) {
-                dynamicCountDownText = 'collected';
-                dynamicCountDownColor = secondaryColor;
+                // dynamicCountDownText = 'collected';
+                // dynamicCountDownColor = secondaryColor;
                 coordinatesData.add(inferencingList);
-                print(
-                    "INFERENCING LIST CHECKING LEN --> ${inferencingList.length}");
+
                 execTotalFrames = execTotalFrames + inferencingList.length;
-                print("execTotalFrames --> $execTotalFrames");
 
                 inferencingData = {
                   'coordinatesData': inferencingList,
@@ -280,19 +268,14 @@ class _inferencingState extends State<inferencing> {
                 numExec++;
 
                 queueInferencingData.add(inferencingData);
-
-                print(
-                    "queueInferencingData.length --> $queueInferencingData.length");
               }
-              print("current count---> ${coordinatesData.length}");
+
               inferencingList = [];
-              print(
-                  "collecting--- ${isDataCollected} -------1---- ${nowPerforming}");
             }
           }
         } else if (value == false) {
           if (nowPerforming == 1) {
-            dynamicCountDownText = 'collecting';
+            // dynamicCountDownText = 'collecting';
             dynamicCountDownColor = Colors.blue;
             checkFramesCaptured = false;
 
@@ -301,9 +284,7 @@ class _inferencingState extends State<inferencing> {
               inferencingList.add(temp);
             }
             isDataCollected = false;
-            print("collecting coordinates");
-            print(
-                "collecting--- ${isDataCollected} ------2----- ${nowPerforming}");
+
             temp = [];
           }
         }
@@ -319,17 +300,11 @@ class _inferencingState extends State<inferencing> {
             }
           }
 
-          if (_controller.getTime().toString() == "3" && nowPerforming == 0) {
+          if (_controller.getTime().toString() == "5" && nowPerforming == 0) {
             nowPerforming = 1;
           }
           //---------------after not moving for 3 sec-------------------------
 
-          // execTotalFrames = execTotalFrames + noMovementCtr;
-
-          // Map<String, dynamic> inferencingData = {
-          //   'inferencingData': inferencingList.sublist(0, noMovementCtr),
-          //   'token': rootIsolateTokenInferencing,
-          // };
           noMovementCtr = 0;
 
           setState(() {
@@ -344,9 +319,6 @@ class _inferencingState extends State<inferencing> {
             }
           });
         } else {
-          print("outside nowperforming--->, $nowPerforming");
-
-          // noMovementCtr++;
           // -----------------checking for movement before executing for collecting data--------------------------------------
 
           if (nowPerforming == 0) {
@@ -367,7 +339,7 @@ class _inferencingState extends State<inferencing> {
       });
     }
 
-    if (queueInferencingData.isNotEmpty) {
+    if (queueInferencingData.isNotEmpty && nowPerforming == 1) {
       inferencingCoordinatesData(
               queueInferencingData.elementAt(0), widget.model)
           .then((value) {
@@ -378,32 +350,63 @@ class _inferencingState extends State<inferencing> {
           dynamicCountDownColor = Color.fromARGB(255, 255, 0, 0);
         }
         queueInferencingData.removeAt(0);
-        print('test');
       }).catchError((error) {
         print("Error at inferencing data ---> $error");
       });
     }
 
     if (inferenceCorrectCtr == widget.numberOfExecution) {
-      setState(() {
-        currentDuration2 = 30;
-      });
+      setsAchieved = setsAchieved + 1;
       nowPerforming = 3;
       inferenceCorrectCtr = 0;
-      dynamicCountDownText = 'rest';
 
-      _controller.start();
+      setState(() {
+        _controller.restart(duration: 30);
+      });
+      currentDuration2 = 30;
+      dynamicCountDownText = "rest";
+
+      _controller2.start();
     }
 
-    if (_controller.getTime().toString() == "10" && nowPerforming == 3) {
-      nowPerforming = 1;
-    }
     if (nowPerforming == 3) {
       String num = _controller.getTime().toString();
       int num2 = int.parse(num);
+      currentDuration2 = 30;
 
       dynamicCountDownColor =
-          Color.fromARGB(255, 193, 140 + num2 * 3, 100 + num2 * 5);
+          Color.fromARGB(255, 193, 140 - num2 * 3, 100 - num2 * 5);
+      Color.fromARGB(255, 193, 140, 100);
+
+      if (_controller.getTime().toString() == '6') {
+        dynamicCountDownText = "ready";
+      }
+
+      if (_controller.getTime().toString() == '5') {
+        dynamicCountDownText = "ready";
+      }
+
+      if (_controller.getTime().toString() == '4') {
+        dynamicCountDownText = "ready";
+      }
+
+      if (_controller.getTime().toString() == '27') {
+        dynamicCountDownText = "27";
+      }
+
+      if (_controller.getTime().toString() == '28') {
+        dynamicCountDownText = "28";
+      }
+
+      if (_controller.getTime().toString() == '29') {
+        dynamicCountDownText = "29";
+      }
+
+      if (_controller.getTime().toString() == "30") {
+        dynamicCountDownText = "Perform";
+
+        nowPerforming = 1;
+      }
     }
 
     if (inputImage.metadata?.size != null &&
@@ -427,48 +430,18 @@ class _inferencingState extends State<inferencing> {
   }
 
   void updateProgress(double progress) {
-    print("UPDATING PROGRESS ---> , $progress");
     setState(() {
-      // Update your state variables based on the progress
-      // For example, assign the progress to a variable to display it in the UI
       _progress = progress;
     });
   }
 
-  @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       body: Stack(
         children: [
-          //   Align(
-          //     alignment: Alignment.topCenter,
-          //     child: Transform.translate(
-          //       offset: Offset(0.0, -150.0), // Adjust the y-value to move it up
-          //       child: Column(
-          //         mainAxisAlignment: MainAxisAlignment.end,
-          //         children: [
-          //           Text(
-          //             "Now performing:",
-          //             style: TextStyle(
-          //               fontSize: 24.0,
-          //               fontWeight: FontWeight.bold,
-          //               color: tertiaryColor,
-          //             ),
-          //           ),
-          //           Text(
-          //             "Exercise name here",
-          //             style: TextStyle(
-          //               fontSize: 24.0,
-          //               fontWeight: FontWeight.bold,
-          //               color: tertiaryColor,
-          //             ),
-          //           ),
-          //         ],
-          //       ),
-          //     ),
-          //   ),
           DetectorView(
             title: 'Pose Detector',
             customPaint: _customPaint,
@@ -478,7 +451,6 @@ class _inferencingState extends State<inferencing> {
             onCameraLensDirectionChanged: (value) =>
                 _cameraLensDirection = value,
           ),
-
           Positioned(
             left: 0,
             top: 0,
@@ -517,54 +489,49 @@ class _inferencingState extends State<inferencing> {
             ),
           ),
           Align(
-              alignment: Alignment.topCenter,
-              child: CircularCountDownTimer(
-                // duration: currentDuration2,
-                duration: 5,
+            alignment: Alignment.topCenter,
+            child: CircularCountDownTimer(
+              duration: 5,
+              // duration: 5,
 
-                initialDuration: 0,
-                controller: _controller,
-                // width: MediaQuery.of(context).size.width / 2,
-                // height: MediaQuery.of(context).size.height / 2,
-                width: MediaQuery.of(context).size.width / 4,
-                height: MediaQuery.of(context).size.height / 4,
-                ringColor: Colors.white!,
-                ringGradient: null,
-                fillColor: Colors.red,
-                fillGradient: null,
-                backgroundColor: dynamicCountDownColor,
-                backgroundGradient: null,
-                strokeWidth: 20.0,
-                strokeCap: StrokeCap.round,
-                textStyle: TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold),
-                textFormat: CountdownTextFormat.S,
-                isReverse: false,
-                isReverseAnimation: false,
-                isTimerTextShown: true,
-                autoStart: false,
-                onStart: () {
-                  print('Countdown Started');
-                },
-                onComplete: () {
-                  print('Countdown Ended');
-                },
-                onChange: (String timeStamp) {
-                  print('Countdown Changed $timeStamp');
-                },
-                timeFormatterFunction: (defaultFormatterFunction, duration) {
-                  if (nowPerforming == 1 || nowPerforming == 3) {
-                    return dynamicCountDownText;
-                  } else {
-                    return Function.apply(defaultFormatterFunction, [duration]);
-                  }
-                },
-              )
-              // countdownTimer(context, dynamicCountDownText,
-              //     dynamicCountDownColor, _controller)
-              ),
+              initialDuration: 0,
+              controller: _controller,
+              // width: MediaQuery.of(context).size.width / 2,
+              // height: MediaQuery.of(context).size.height / 2,
+              width: MediaQuery.of(context).size.width / 4,
+              height: MediaQuery.of(context).size.height / 4,
+              ringColor: Colors.white!,
+              ringGradient: null,
+              fillColor: Colors.red,
+              fillGradient: null,
+              backgroundColor: dynamicCountDownColor,
+              backgroundGradient: null,
+              strokeWidth: 20.0,
+              strokeCap: StrokeCap.round,
+              textStyle: TextStyle(
+                  fontSize:
+                      ((screenHeight + screenWidth) * textAdaptModifier) * 20.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w400),
+              textFormat: CountdownTextFormat.S,
+              isReverse: false,
+              isReverseAnimation: false,
+              isTimerTextShown: true,
+              autoStart: false,
+              onStart: () {},
+              onComplete: () {},
+              onChange: (String timeStamp) {
+                print('Countdown Changed $timeStamp');
+              },
+              timeFormatterFunction: (defaultFormatterFunction, duration) {
+                if (nowPerforming == 1 || nowPerforming == 3) {
+                  return dynamicCountDownText;
+                } else {
+                  return Function.apply(defaultFormatterFunction, [duration]);
+                }
+              },
+            ),
+          ),
           // Align(
           //   alignment: Alignment.bottomCenter,
           //   child: FractionallySizedBox(
@@ -574,56 +541,127 @@ class _inferencingState extends State<inferencing> {
           //       color: mainColor,
           //     ),
           //   ),
-          // ),
           Positioned(
-            bottom: screenHeight * .04,
-            right: screenWidth * .28,
-            child: Text(
-              " ${inferenceCorrectCtr.toString()}",
-              style: TextStyle(
-                fontSize: 40.0,
-                fontWeight: FontWeight.w500,
-                color: tertiaryColor,
-              ),
+            top: screenHeight * 0.04,
+            right: screenWidth * 0.05,
+            child: Column(
+              children: [
+                // ),
+                Text(
+                  "  Execution",
+                  style: TextStyle(
+                    fontSize:
+                        ((screenHeight + screenWidth) * textAdaptModifier) *
+                            13.0,
+                    fontWeight: FontWeight.w500,
+                    color: tertiaryColor,
+                  ),
+                ),
+                Positioned(
+                  child: Row(
+                    children: [
+                      Text(
+                        " ${inferenceCorrectCtr.toString()}",
+                        style: TextStyle(
+                          fontSize: ((screenHeight + screenWidth) *
+                                  textAdaptModifier) *
+                              35.0,
+                          fontWeight: FontWeight.w300,
+                          color: tertiaryColor,
+                        ),
+                      ),
+                      Text(
+                        " / ${widget.numberOfExecution.toString()}",
+                        style: TextStyle(
+                          fontSize: ((screenHeight + screenWidth) *
+                                  textAdaptModifier) *
+                              35.0,
+                          fontWeight: FontWeight.w300,
+                          color: secondaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
 
           Positioned(
-            bottom: screenHeight * .04,
-            right: screenWidth * .08,
-            child: Text(
-              " / ${widget.numberOfExecution.toString()}",
-              style: TextStyle(
-                fontSize: 40.0,
-                fontWeight: FontWeight.w500,
-                color: secondaryColor,
-              ),
+            top: screenHeight * 0.04,
+            left: screenWidth * 0.05,
+            child: Column(
+              children: [
+                // ),
+                Text(
+                  "  Sets Needed ",
+                  style: TextStyle(
+                    fontSize:
+                        ((screenHeight + screenWidth) * textAdaptModifier) *
+                            13.0,
+                    fontWeight: FontWeight.w500,
+                    color: tertiaryColor,
+                  ),
+                ),
+                Positioned(
+                  child: Row(
+                    children: [
+                      Text(
+                        " ${setsAchieved.toString()}",
+                        style: TextStyle(
+                          fontSize: ((screenHeight + screenWidth) *
+                                  textAdaptModifier) *
+                              35.0,
+                          fontWeight: FontWeight.w300,
+                          color: tertiaryColor,
+                        ),
+                      ),
+                      Text(
+                        " / ${widget.setsNeeded.toString()}",
+                        style: TextStyle(
+                          fontSize: ((screenHeight + screenWidth) *
+                                  textAdaptModifier) *
+                              35.0,
+                          fontWeight: FontWeight.w300,
+                          color: secondaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
           Positioned(
-            bottom: screenHeight * .08,
-            left: screenWidth * .06,
-            child: Text(
-              "Exercise:",
-              style: TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.w500,
-                color: secondaryColor,
-              ),
+            left: screenWidth * .05,
+            bottom: screenHeight * .03,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start, // Add this line
+              children: [
+                Text(
+                  " Exercise: ",
+                  style: TextStyle(
+                    fontSize:
+                        ((screenHeight + screenWidth) * textAdaptModifier) *
+                            16.0,
+                    fontWeight: FontWeight.w300,
+                    color: secondaryColor,
+                  ),
+                ),
+                Text(
+                  "  ${widget.nameOfExercise}",
+                  style: TextStyle(
+                    fontSize:
+                        ((screenHeight + screenWidth) * textAdaptModifier) *
+                            25.0,
+                    fontWeight: FontWeight.w400,
+                    color: tertiaryColor,
+                  ),
+                ),
+              ],
             ),
           ),
-          Positioned(
-            bottom: screenHeight * .04,
-            left: screenWidth * .06,
-            child: Text(
-              widget.nameOfExercise,
-              style: TextStyle(
-                fontSize: 24.0,
-                fontWeight: FontWeight.w300,
-                color: tertiaryColor,
-              ),
-            ),
-          ),
+
           IconButton(
             icon: Icon(
               Icons.arrow_back,

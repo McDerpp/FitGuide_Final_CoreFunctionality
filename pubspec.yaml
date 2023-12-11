@@ -31,6 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
   camera: ^0.10.5
+  timer_count_down: ^2.2.0
 
 
 

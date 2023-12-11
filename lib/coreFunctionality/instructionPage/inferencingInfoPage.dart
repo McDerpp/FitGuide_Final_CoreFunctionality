@@ -150,26 +150,32 @@ class _inferenceInfoPageState extends State<inferenceInfoPage> {
                     description1(
                       DescTitle: widget.exerciseName,
                       Desc: widget.exerciseNameDescription,
+                      context: context,
                     ),
                     description1(
                       DescTitle: widget.numberOfExecution,
                       Desc: widget.numberOfExecutionDescription.toString(),
+                      context: context,
                     ),
                     description1(
                       DescTitle: widget.setsNeeded,
                       Desc: widget.setsNeededDescription.toString(),
+                      context: context,
                     ),
                     description1(
                       DescTitle: widget.bodyPartTarget,
                       Desc: widget.bodyPartTargetDescription,
+                      context: context,
                     ),
                     description1(
                       DescTitle: widget.perspective,
                       Desc: widget.perspectiveDescription,
+                      context: context,
                     ),
                     description1(
                       DescTitle: widget.userMade,
                       Desc: widget.userMadeDescription,
+                      context: context,
                     ),
                   ],
                 ),

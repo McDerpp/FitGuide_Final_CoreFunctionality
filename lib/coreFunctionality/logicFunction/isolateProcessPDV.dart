@@ -52,7 +52,9 @@ Future<bool> inferencingCoordinatesData(
 
   print("tensor needed ----> $testtestset ");
 
-  for (int i = 0; i < 23; i++) {
+  for (int i = 0; i < 9; i++) {
+  // for (int i = 0; i < 23; i++) {
+
     tempArray.add(coordinates.elementAt(0));
 
     try {
@@ -77,8 +79,11 @@ Future<bool> inferencingCoordinatesData(
   }
 }
 
-List<double> coordinatesRelativeBoxIsolate(Map<String, dynamic> inputs) {
+List<double> coordinatesRelativeBoxIsolate(
+  Map<String, dynamic> inputs,
+) {
   var rootIsolateToken = inputs['token'];
+  List<int> coordinatesIgnore = inputs['coordinatesIgnore'];
   Iterable<PoseLandmark> rawCoordiantes = inputs['inputImage'];
   // print("coordinatesRelativeBox ---> ${rawCoordiantes.first.x}");
 
@@ -98,32 +103,51 @@ List<double> coordinatesRelativeBoxIsolate(Map<String, dynamic> inputs) {
 
   var rawX;
   var rawY;
+  int ctr = 0;
+  int ctr2 = 0;
 
   for (var pose in rawCoordiantes) {
-    if (minCoordinatesX >= pose.x) {
-      minCoordinatesX = pose.x;
-    }
-    if (minCoordinatesY >= pose.y) {
-      minCoordinatesY = pose.y;
-    }
+    if (coordinatesIgnore.contains(ctr)==false) {
+      if (minCoordinatesX >= pose.x) {
+        minCoordinatesX = pose.x;
+      }
+      if (minCoordinatesY >= pose.y) {
+        minCoordinatesY = pose.y;
+      }
 
-    if (maxCoordinatesX <= pose.x) {
-      maxCoordinatesX = pose.x;
+      if (maxCoordinatesX <= pose.x) {
+        maxCoordinatesX = pose.x;
+      }
+      if (maxCoordinatesY <= pose.y) {
+        maxCoordinatesY = pose.y;
+      }
     }
-    if (maxCoordinatesY <= pose.y) {
-      maxCoordinatesY = pose.y;
-    }
+    ctr++;
   }
 
   for (var pose in rawCoordiantes) {
-    valueXRange =
-        (pose.x - minCoordinatesX) / (maxCoordinatesX - minCoordinatesX);
-    valueYRange =
-        (pose.y - minCoordinatesY) / (maxCoordinatesY - minCoordinatesY);
+    if (coordinatesIgnore.contains(ctr2)==false) {
+      valueXRange =
+          (pose.x - minCoordinatesX) / (maxCoordinatesX - minCoordinatesX);
+      valueYRange =
+          (pose.y - minCoordinatesY) / (maxCoordinatesY - minCoordinatesY);
+}else{
+valueXRange = 0.0;
+valueYRange = 0.0;
 
-    // flattening it ahead of time for later processes later...
-    translatedCoordinates.add(valueXRange);
-    translatedCoordinates.add(valueYRange);
+}
+      // flattening it ahead of time for later processes later...
+      translatedCoordinates.add(valueXRange);
+      translatedCoordinates.add(valueYRange);
+    
+    ctr2++;
+  }
+  int ctr3 = 0;
+  print(
+      "---------------------------------------------------------------------------------");
+  for (var contentttt in translatedCoordinates) {
+    print("translate[$ctr3] --> $contentttt ");
+    ctr3++;
   }
 
   return translatedCoordinates;
@@ -208,5 +232,56 @@ Future<void> translateCollectedDatatoTxt(
     await file.writeAsString('END\n', mode: FileMode.append);
     print(
         "=========================================================================");
+  }
+}
+
+Future<void> translateCollectedDatatoTxt2(
+  Map<String, dynamic> inputs,
+) async {
+  BackgroundIsolateBinaryMessenger.ensureInitialized(inputs['token']);
+  Directory externalDir = await getApplicationDocumentsDirectory();
+  String externalPath = externalDir!.path;
+  String filePath = '$externalPath/coordinatesCollected.txt';
+  File file = File(filePath);
+  file.writeAsStringSync('');
+  int progressCtr = 0;
+
+  for (List exerciseSet in inputs['coordinates']) {
+    progressCtr++;
+    print("progressCtr --> $progressCtr");
+    // progressT = (progressCtr / dataCollected.length);
+    // updateProgress(progressT);
+
+    // print("progressT---> $progressT");
+    await file.writeAsString('START\n', mode: FileMode.append);
+    // print("len_per_set ---> ${exerciseSet.length}");
+    // print(
+    //     "=========================================================================");
+
+    for (List sequence in exerciseSet) {
+      print("test1");
+      //   print("seq_per_set ---> ${exerciseSet.length}");
+      //   // print("->> $sequence ");
+
+      for (double individualCoordinate in sequence) {
+        print("individualCoordinate");
+        // print(
+        //     "individualCoordinate(len)--> ${individualCoordinate.toString().length}");
+
+        if (individualCoordinate.toString().length > 10) {
+          await file.writeAsString(
+              '${individualCoordinate.toString().substring(0, 10)}|',
+              mode: FileMode.append);
+        } else {
+          await file.writeAsString('${individualCoordinate.toString()}|',
+              mode: FileMode.append);
+        }
+      }
+      await file.writeAsString('\n', mode: FileMode.append);
+      // }
+      await file.writeAsString('END\n', mode: FileMode.append);
+      // print(
+      // "=========================================================================");
+    }
   }
 }
