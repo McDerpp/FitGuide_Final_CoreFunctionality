@@ -7,46 +7,46 @@ import 'package:frontend/coreFunctionality/mainUISettings.dart';
 
 import 'isolateProcessPDV.dart';
 
-Future<void> relativeBoxIsolateFunction(
-    {required List<Map<String, dynamic>> queueNormalizeData,
-    required List<List<double>> tempPrevCurr,
-    required bool nowPerforming,
-    required List<double> prevCoordinates,
-    required List<double> temp,
-    required List<double> currentCoordinates,
-    required RootIsolateToken rootIsolateTokenNoMovement,
-    required List<Map<String, dynamic>> queueMovementData,
-    required Map<String, dynamic> checkMovementIsolate}) async {
-  print('relative attempt --> ${queueNormalizeData.elementAt(0)['inputImage']}');
-  print('relative attempt2 --> ${queueNormalizeData.elementAt(0)['token']}');
+// Future<void> relativeBoxIsolateFunction(
+//     {required List<Map<String, dynamic>> queueNormalizeData,
+//     required List<List<double>> tempPrevCurr,
+//     required bool nowPerforming,
+//     required List<double> prevCoordinates,
+//     required List<double> temp,
+//     required List<double> currentCoordinates,
+//     required RootIsolateToken rootIsolateTokenNoMovement,
+//     required List<Map<String, dynamic>> queueMovementData,
+//     required Map<String, dynamic> checkMovementIsolate}) async {
+//   print('relative attempt --> ${queueNormalizeData.elementAt(0)['inputImage']}');
+//   print('relative attempt2 --> ${queueNormalizeData.elementAt(0)['token']}');
 
-  if (queueNormalizeData.isNotEmpty) {
-    compute(coordinatesRelativeBoxIsolate, queueNormalizeData.elementAt(0))
-        .then((value) {
-      queueNormalizeData.removeAt(0);
-      tempPrevCurr.add(value);
-      // inferencingList.add(value);
-      if (nowPerforming == true) {
-        temp = value;
-        // temp.add(value);
-      }
-      if (tempPrevCurr.length > 1) {
-        prevCoordinates = tempPrevCurr.elementAt(0);
-        currentCoordinates = tempPrevCurr.elementAt(1);
+//   if (queueNormalizeData.isNotEmpty) {
+//     compute(coordinatesRelativeBoxIsolate, queueNormalizeData.elementAt(0))
+//         .then((value) {
+//       queueNormalizeData.removeAt(0);
+//       tempPrevCurr.add(value);
+//       // inferencingList.add(value);
+//       if (nowPerforming == true) {
+//         temp = value;
+//         // temp.add(value);
+//       }
+//       if (tempPrevCurr.length > 1) {
+//         prevCoordinates = tempPrevCurr.elementAt(0);
+//         currentCoordinates = tempPrevCurr.elementAt(1);
 
-        Map<String, dynamic> checkMovementIsolate = {
-          'prevCoordinates': prevCoordinates,
-          'currentCoordinates': currentCoordinates,
-          'token': rootIsolateTokenNoMovement,
-        };
-        queueMovementData.add(checkMovementIsolate);
-        tempPrevCurr.removeAt(0);
-      }
-    }).catchError((error) {
-      print("Error at coordinate relative ---> $error");
-    });
-  }
-}
+//         Map<String, dynamic> checkMovementIsolate = {
+//           'prevCoordinates': prevCoordinates,
+//           'currentCoordinates': currentCoordinates,
+//           'token': rootIsolateTokenNoMovement,
+//         };
+//         queueMovementData.add(checkMovementIsolate);
+//         tempPrevCurr.removeAt(0);
+//       }
+//     }).catchError((error) {
+//       print("Error at coordinate relative ---> $error");
+//     });
+//   }
+// }
 
 Future<void> checkMovementFunction({
   required List<Map<String, dynamic>> queueMovementData,

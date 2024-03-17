@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:core';
+import 'dart:math';
 
 import 'package:flutter/services.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
@@ -18,22 +19,27 @@ void paddingInitialize() {
 }
 
 Future<void> modelInitialize(String modelPath) async {
-  print("INITIALIZED");
   final head = await tfl.Interpreter.fromAsset(modelPath);
 }
 
-List<List<double>> padding(List<List<double>> input, int requiredlength) {
-  List<List<double>> result = [];
-  if (paddingList.length != 66) {
-    for (int i = 0; i < 66; i++) {
-      paddingList.add(0);
-    }
+List<List<double>> padding(List<List<double>> input, int requiredLength) {
+  List<List<double>> result =
+      List.from(input); // Create a copy of the input list
+  List<double> paddingList =
+      List.filled(66, 0); // Initialize paddingList with zeros
+
+  while (result.length > requiredLength) {
+    int maxRange = result.length;
+    int randomNumber = Random().nextInt(maxRange);
+    result.removeAt(randomNumber);
   }
 
-  for (int i = 0; i < requiredlength - input.length; i++) {
-    result.add(paddingList);
+  while (result.length < requiredLength) {
+    result.add(
+        List.from(paddingList)); // Create a new instance of the padding list
   }
 
+  print("result of padding is --> ${result.length}");
   return result;
 }
 
@@ -47,47 +53,44 @@ Future<bool> inferencingCoordinatesData(
   var output = List.generate(1, (index) => List<double>.filled(1, 0));
 
   List<List<double>> coordinates = inputs['coordinatesData'];
+  coordinates = padding(coordinates, 5);
 
   var testtestset = head.getInputTensors();
 
-  print("tensor needed ----> $testtestset ");
+  try {
+    head.run(coordinates, output);
+    print("output of inferencing( ---> $output");
+  } catch (error) {}
 
-  for (int i = 0; i < 9; i++) {
-  // for (int i = 0; i < 23; i++) {
+  try {
+    head.runInference(coordinates);
+    print("runInference ---> $output");
+  } catch (error) {}
 
-    tempArray.add(coordinates.elementAt(0));
-
-    try {
-      head.run(tempArray, output);
-
-      print("output of inferencing( ---> $output");
-    } catch (error) {
-      print("head.run(coordinates, output); error! -> $error");
-    }
-
-    try {
-      head.runInference(tempArray);
-      print("runInference ---> $output");
-    } catch (error) {
-      print("head.runInference(coordinates); error! -> $error");
-    }
-  }
-  if (output.elementAt(0).elementAt(0) >= .70) {
+  if (output.elementAt(0).elementAt(0) >= .80) {
     return true;
   } else {
     return false;
   }
 }
 
-List<double> coordinatesRelativeBoxIsolate(
+Map<String, dynamic> coordinatesRelativeBoxIsolate(
   Map<String, dynamic> inputs,
 ) {
-  var rootIsolateToken = inputs['token'];
-  List<int> coordinatesIgnore = inputs['coordinatesIgnore'];
-  Iterable<PoseLandmark> rawCoordiantes = inputs['inputImage'];
-  // print("coordinatesRelativeBox ---> ${rawCoordiantes.first.x}");
+  // BE AWARE OF THIS PARAMETER
+  // This should match the training data pre process...currently its 3 decimal places
+  int dataNormalizedDecimalPlace = 3;
+  List<int> coordinatesIgnore = [];
 
-  BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
+  if (inputs.containsKey('token')) {
+    var rootIsolateToken = inputs['token'];
+    BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
+  }
+
+  if (inputs.containsKey('coordinatesIgnore')) {
+    coordinatesIgnore = inputs['coordinatesIgnore'];
+  }
+  Iterable<PoseLandmark> rawCoordiantes = inputs['inputImage'];
 
   List<double> translatedCoordinates = [];
   double allowance = .03;
@@ -106,8 +109,16 @@ List<double> coordinatesRelativeBoxIsolate(
   int ctr = 0;
   int ctr2 = 0;
 
+  int checkLikelihoodCtr = 0;
+  bool allCoordinatesPresent = true;
+
   for (var pose in rawCoordiantes) {
-    if (coordinatesIgnore.contains(ctr)==false) {
+    if (coordinatesIgnore.contains(ctr) == false) {
+      print("pose.likelihood ---> ${pose.likelihood}");
+      if (pose.likelihood <= .75) {
+        checkLikelihoodCtr++;
+      }
+
       if (minCoordinatesX >= pose.x) {
         minCoordinatesX = pose.x;
       }
@@ -126,31 +137,45 @@ List<double> coordinatesRelativeBoxIsolate(
   }
 
   for (var pose in rawCoordiantes) {
-    if (coordinatesIgnore.contains(ctr2)==false) {
+    if (coordinatesIgnore.contains(ctr2) == false) {
       valueXRange =
           (pose.x - minCoordinatesX) / (maxCoordinatesX - minCoordinatesX);
       valueYRange =
           (pose.y - minCoordinatesY) / (maxCoordinatesY - minCoordinatesY);
-}else{
-valueXRange = 0.0;
-valueYRange = 0.0;
+    } else {
+      valueXRange = 0.0;
+      valueYRange = 0.0;
+    }
+    // flattening it ahead of time for later processes later...
 
-}
-      // flattening it ahead of time for later processes later...
-      translatedCoordinates.add(valueXRange);
-      translatedCoordinates.add(valueYRange);
-    
+    translatedCoordinates.add(
+        double.parse(valueXRange.toStringAsFixed(dataNormalizedDecimalPlace)));
+    translatedCoordinates.add(
+        double.parse(valueYRange.toStringAsFixed(dataNormalizedDecimalPlace)));
+
     ctr2++;
   }
   int ctr3 = 0;
-  print(
-      "---------------------------------------------------------------------------------");
-  for (var contentttt in translatedCoordinates) {
-    print("translate[$ctr3] --> $contentttt ");
-    ctr3++;
-  }
 
-  return translatedCoordinates;
+  if (checkLikelihoodCtr >= 1) {
+    allCoordinatesPresent = false;
+  }
+  print("checkLikelihoodCtr --> $checkLikelihoodCtr");
+
+  Map<String, double> minMaxCoordinatesXY = {
+    'maxCoor_Y': maxCoordinatesY,
+    'maxCoor_X': maxCoordinatesX,
+    'minCoor_Y': minCoordinatesY,
+    'minCoor_X': minCoordinatesX,
+  };
+
+  Map<String, dynamic> dataNormalizationIsolateResults = {
+    'translatedCoordinates': translatedCoordinates,
+    'allCoordinatesPresent': allCoordinatesPresent,
+    'minMaxCoordinatesXY': minMaxCoordinatesXY
+  };
+
+  return dataNormalizationIsolateResults;
 }
 
 bool checkMovement(Map<String, dynamic> input) {
@@ -159,7 +184,7 @@ bool checkMovement(Map<String, dynamic> input) {
   var token = input['token'];
 
   bool noMovement = false;
-  double changeRange = 0.07;
+  double changeRange = 0.045;
   int noMovementCtr = 0;
 
   for (int ctr = 0; ctr < prevCoordinates.length; ctr++) {
@@ -168,17 +193,11 @@ bool checkMovement(Map<String, dynamic> input) {
         prevCoordinates.elementAt(ctr) + changeRange >=
             currentCoordinates.elementAt(ctr)) {
       noMovementCtr++;
-      // print("checking(not moving) - $ctr");
     } else {
-      // print(
-      //     "===========================[YOU MOOOOOVED!]======================================");
       return false;
     }
   }
-  // print(
-  //     "======================================================================================");
 
-  // print("noMovementCtr --> $noMovementCtr");
   if (noMovementCtr >= 65) {
     return true;
   } else {
@@ -204,20 +223,9 @@ Future<void> translateCollectedDatatoTxt(
 
     print("progressT---> $progressT");
     await file.writeAsString('START\n', mode: FileMode.append);
-    print("len_per_set ---> ${exerciseSet.length}");
-    print(
-        "=========================================================================");
 
     for (List sequence in exerciseSet) {
-      print("test1");
-      print("seq_per_set ---> ${exerciseSet.length}");
-      print("->> $sequence ");
-
       for (double individualCoordinate in sequence) {
-        print("individualCoordinate");
-        print(
-            "individualCoordinate(len)--> ${individualCoordinate.toString().length}");
-
         if (individualCoordinate.toString().length > 10) {
           await file.writeAsString(
               '${individualCoordinate.toString().substring(0, 10)}|',
@@ -230,11 +238,10 @@ Future<void> translateCollectedDatatoTxt(
       await file.writeAsString('\n', mode: FileMode.append);
     }
     await file.writeAsString('END\n', mode: FileMode.append);
-    print(
-        "=========================================================================");
   }
 }
 
+// this one is being used
 Future<void> translateCollectedDatatoTxt2(
   Map<String, dynamic> inputs,
 ) async {
@@ -249,25 +256,10 @@ Future<void> translateCollectedDatatoTxt2(
   for (List exerciseSet in inputs['coordinates']) {
     progressCtr++;
     print("progressCtr --> $progressCtr");
-    // progressT = (progressCtr / dataCollected.length);
-    // updateProgress(progressT);
-
-    // print("progressT---> $progressT");
     await file.writeAsString('START\n', mode: FileMode.append);
-    // print("len_per_set ---> ${exerciseSet.length}");
-    // print(
-    //     "=========================================================================");
 
     for (List sequence in exerciseSet) {
-      print("test1");
-      //   print("seq_per_set ---> ${exerciseSet.length}");
-      //   // print("->> $sequence ");
-
       for (double individualCoordinate in sequence) {
-        print("individualCoordinate");
-        // print(
-        //     "individualCoordinate(len)--> ${individualCoordinate.toString().length}");
-
         if (individualCoordinate.toString().length > 10) {
           await file.writeAsString(
               '${individualCoordinate.toString().substring(0, 10)}|',
@@ -282,6 +274,40 @@ Future<void> translateCollectedDatatoTxt2(
       await file.writeAsString('END\n', mode: FileMode.append);
       // print(
       // "=========================================================================");
+    }
+  }
+}
+
+void calculateVarianceIsolate(
+    int numFrameGroup, List<List<List<double>>> coordinatesData) {
+  if (coordinatesData.length % numFrameGroup == 0) {
+    double variance = 0;
+    List<int> sequenceLen = [];
+    List<int> sequenceTally = [];
+    List<List<List<double>>> individualCoorManager = [];
+
+    for (List<List<double>> sequenceData in coordinatesData) {
+      if (sequenceLen.contains(sequenceData.length) == false) {
+        sequenceLen.add(sequenceData.length);
+        individualCoorManager.add(sequenceData);
+        sequenceTally.add(1);
+      } else {
+        int tempIndex = sequenceLen.indexOf(sequenceData.length);
+        int tempSeq = sequenceLen[tempIndex];
+
+        sequenceTally[tempIndex] = sequenceTally[tempIndex]++;
+        for (int ctr1 = 0;
+            ctr1 <= individualCoorManager[tempIndex].length;
+            ctr1++) {
+          for (int ctr = 0;
+              ctr <= individualCoorManager[tempIndex][ctr1].length;
+              ctr++) {
+            individualCoorManager[tempIndex][ctr1][ctr] =
+                individualCoorManager[tempIndex][ctr1][ctr] +
+                    sequenceData[ctr1][ctr];
+          }
+        }
+      }
     }
   }
 }

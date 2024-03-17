@@ -1,22 +1,184 @@
+// import 'dart:js_interop';
+
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/coreFunctionality/globalVariables.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../instructionPage/instructionPage.dart';
 import '../logicFunction/isolateProcessPDV.dart';
 import '../mainUISettings.dart';
 
+// class cwDataAnalysis extends ConsumerStatefulWidget {
+//   final double widthMultiplier;
+//   final double heightMultiplier;
+//   final int alphaValue;
+
+//   const cwDataAnalysis({
+//     super.key,
+//     this.widthMultiplier = 0.7,
+//     this.heightMultiplier = 0.25,
+//     this.alphaValue = 235,
+//   });
+
+//   @override
+//   ConsumerState<cwDataAnalysis> createState() => _cwDataAnalysisState();
+// }
+
+// class _cwDataAnalysisState extends ConsumerState<cwDataAnalysis> {
+//   late Color mainColor;
+//   late Color secondaryColor;
+//   late Color tertiaryColor;
+//   late Map<String, double> textSizeModifierSet;
+//   late double textSizeModifierSetIndividual;
+//   late Map<String, Color> colorSet;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     mainColor = ref.watch(mainColorState);
+//     secondaryColor = ref.watch(secondaryColorState);
+//     tertiaryColor = ref.watch(tertiaryColorState);
+//     textSizeModifierSet = ref.watch(textSizeModifier);
+//     textSizeModifierSetIndividual = textSizeModifierSet["smallText"]!;
+//     colorSet = {
+//       "mainColor": mainColor,
+//       "secondaryColor": secondaryColor,
+//       "tertiaryColor": tertiaryColor,
+//     };
+//   }
+
+//   void executionAnalysis({
+//     required Map<String, double> textSizeModifier,
+//     required Map<String, Color> colorSet,
+//     required BuildContext context,
+//     required int numExec,
+//     required double avgFrames,
+//     required List<dynamic> coordinatesData,
+//     required double progress,
+//   }) {
+//     double screenWidth = MediaQuery.of(context).size.width;
+//     double screenHeight = MediaQuery.of(context).size.height;
+
+//     return showCustomDialog(
+//       context,
+//       Column(
+//         children: [
+//           Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               textInfoCtr("Total executedssssssssss", numExec.toDouble(),
+//                   textSizeModifier['smallText2']! * screenWidth, Colors.white),
+//               textInfoCtr("Total executed", numExec.toDouble(),
+//                   textSizeModifier['mediumText']! * screenWidth, Colors.white),
+//             ],
+//           ),
+//           // Spacer(),
+//           Align(
+//             alignment: Alignment.bottomCenter,
+//             child: Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//               children: [
+//                 buildElevatedButton(
+//                   context: context,
+//                   label: "info",
+//                   colorSet: colorSet,
+//                   textSizeModifierIndividual: textSizeModifier['smallText2']!,
+//                   func: () {
+//                     translateCollectedDatatoTxt(
+//                       coordinatesData,
+//                       updateProgress,
+//                     );
+//                   },
+//                 ),
+//                 buildElevatedButton(
+//                   context: context,
+//                   label: "Submit",
+//                   colorSet: colorSet,
+//                   textSizeModifierIndividual: textSizeModifier['smallText2']!,
+//                   func: () {
+//                     loadingBoxTranslating(
+//                       context,
+//                       coordinatesData,
+//                       progress,
+//                       updateProgress,
+//                     ); // Pass the context to the loadingBox function
+//                   },
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   void _updateValues() {
+//     mainColor = ref.watch(mainColorState);
+//     secondaryColor = ref.watch(secondaryColorState);
+//     tertiaryColor = ref.watch(tertiaryColorState);
+//     textSizeModifierSet = ref.watch(textSizeModifier);
+//     textSizeModifierSetIndividual = textSizeModifierSet["smallText"]!;
+//     setState(() {}); // Trigger a rebuild to reflect the updated values
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//         child: buildElevatedButton(
+//             context: context,
+//             label: "Done",
+//             colorSet: colorSet,
+//             textSizeModifierIndividual: textSizeModifierSetIndividual,
+//             func: executionAnalysis(
+//               textSizeModifier: textSizeModifierSet,
+//               avgFrames: 0,
+//               colorSet: colorSet,
+//               context: context,
+//               numExec: 0,
+//               coordinatesData: [],
+//               progress: 0,
+//             ))
+//         // ElevatedButton(
+//         //   onPressed: () {
+//         //     showDialog(
+//         //       context: context,
+//         //       builder: (BuildContext context) {
+//         //         return AlertDialog(
+//         //           backgroundColor:
+//         //               Colors.white.withOpacity(widget.alphaValue / 255.0),
+//         //           content: Container(
+//         //             width: MediaQuery.of(context).size.width *
+//         //                 widget.widthMultiplier,
+//         //             height: MediaQuery.of(context).size.height *
+//         //                 widget.heightMultiplier,
+//         //             child: content,
+//         //           ),
+//         //         );
+//         //       },
+//         //     );
+//         //   },
+//         //   child: Text('Show Dialog'),
+//         // ),
+//         );
+//   }
+// }
+
+// IMPORTANT WIDGET
 void showCustomDialog(
   BuildContext context,
   Widget content, {
-  double widthMultiplier = 0.7,
-  double heightMultiplier = 0.25,
+  double widthMultiplier = 1,
+  double heightMultiplier = 0.35,
+  int alphaValue = 190,
 }) {
   double screenWidth = MediaQuery.of(context).size.width;
   double screenHeight = MediaQuery.of(context).size.height;
+  Color transparentColor = Colors.white.withOpacity(alphaValue / 255.0);
 
   void cancelfunc() {
     Navigator.pop(context);
@@ -24,8 +186,9 @@ void showCustomDialog(
 
   showDialog(
     context: context,
-    builder: (BuildContext context) {
+    builder: (context) {
       return AlertDialog(
+        backgroundColor: transparentColor,
         content: Container(
           width: screenWidth * widthMultiplier,
           height: screenHeight * heightMultiplier,
@@ -36,6 +199,7 @@ void showCustomDialog(
   );
 }
 
+// IMPORTANT WIDGET
 Widget textInfoCtr(
     String label, double? counted, double fontsize, Color color) {
   return Padding(
@@ -90,19 +254,55 @@ Widget instructionText(FontWeight fontw, double fontsize, double leftN,
       ));
 }
 
-Widget buildElevatedButton(String label, Color color, Function func) {
+Widget buildElevatedButton({
+  required BuildContext context,
+  required String label,
+  required Map<String, Color> colorSet,
+  required double textSizeModifierIndividual,
+  required Function func,
+  optionalModif = 0.8,
+}) {
+  print("colorSet-> $colorSet");
+  double screenWidth = MediaQuery.of(context).size.width;
+  double screenHeight = MediaQuery.of(context).size.height;
+
+  dynamic textsize = textSizeModifierIndividual;
+  print("textsize===$textsize.state");
+  textsize = textsize * screenWidth;
+
+  dynamic buttonSizeX = screenWidth * 0.35 * optionalModif;
+  dynamic buttonSizeY = screenHeight * 0.008 * optionalModif;
+
+  Size minSize = Size(buttonSizeX, buttonSizeY);
+  Size maxSize = Size(buttonSizeX, buttonSizeY);
+
   return Padding(
-    padding: EdgeInsets.only(left: 5.0, right: 5.0),
+    padding: EdgeInsets.only(
+      left: 0.05 * buttonSizeX,
+      right: 0.05 * buttonSizeX,
+      top: 0.05 * buttonSizeX,
+      bottom: 0.05 * buttonSizeX,
+    ),
     child: Align(
       alignment: Alignment(1.0, 0.8),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: color,
+          // backgroundColor: colorSet['secondaryColorState'],
+          backgroundColor: colorSet['tertiaryColor'],
+
+          fixedSize: minSize,
+          // padding: EdgeInsets.symmetric(vertical: 1.0, horizontal: 2.0),
         ),
         onPressed: () {
           func();
         },
-        child: Text(label),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: textsize,
+            color: colorSet['mainColor'],
+          ),
+        ),
       ),
     ),
   );
@@ -279,14 +479,19 @@ Widget countdownTimer(
   ));
 }
 
-void executionAnalysis(
-  BuildContext context,
-  int numExec,
-  double avgFrames,
-  List<dynamic> coordinatesData,
-  Function(double) updateProgress,
-  double progress,
-) {
+void executionAnalysis({
+  required Map<String, double> textSizeModifier,
+  required Map<String, Color> colorSet,
+  required BuildContext context,
+  required int numExec,
+  required double avgFrames,
+  required List<dynamic> coordinatesData,
+  required Function(double) updateProgress,
+  required double progress,
+}) {
+  double screenWidth = MediaQuery.of(context).size.width;
+  double screenHeight = MediaQuery.of(context).size.height;
+
   return showCustomDialog(
     context,
     Column(
@@ -294,39 +499,53 @@ void executionAnalysis(
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            textInfoCtr("Total executed", numExec.toDouble(), 15, Colors.black),
-            textInfoCtr("Total executed", numExec.toDouble(), 15, Colors.black),
-            textInfoCtr("Average Frames: ", avgFrames.roundToDouble(), 15,
-                Colors.black),
+            textInfoCtr("Total executedssssssssss", numExec.toDouble(),
+                textSizeModifier['smallText2']! * screenWidth, Colors.white),
+            textInfoCtr("Total executed", numExec.toDouble(),
+                textSizeModifier['mediumText']! * screenWidth, Colors.white),
           ],
         ),
-        Spacer(),
+        // Spacer(),
         Align(
           alignment: Alignment.bottomCenter,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              buildElevatedButton("Cancel", Colors.red, () {
-                Navigator.pop(context);
-              }),
+              // buildElevatedButton(
+              //   context: context,
+              //   label: "Cancel",
+              //   color: Colors.red,
+              //   textSizeModifierIndividual: textSizeModifier,
+              //   func: () {
+              //     Navigator.pop(context);
+              //   },
+              // ),
               buildElevatedButton(
-                "info",
-                Colors.red,
-                () {
+                context: context,
+                label: "info",
+                colorSet: colorSet,
+                textSizeModifierIndividual: textSizeModifier['smallText2']!,
+                func: () {
                   translateCollectedDatatoTxt(
                     coordinatesData,
                     updateProgress,
                   );
                 },
               ),
-              buildElevatedButton("Submit", Colors.red, () {
-                loadingBoxTranslating(
-                  context,
-                  coordinatesData,
-                  progress,
-                  updateProgress,
-                ); // Pass the context to the loadingBox function
-              }),
+              buildElevatedButton(
+                context: context,
+                label: "Submit",
+                colorSet: colorSet,
+                textSizeModifierIndividual: textSizeModifier['smallText2']!,
+                func: () {
+                  loadingBoxTranslating(
+                    context,
+                    coordinatesData,
+                    progress,
+                    updateProgress,
+                  ); // Pass the context to the loadingBox function
+                },
+              ),
             ],
           ),
         ),

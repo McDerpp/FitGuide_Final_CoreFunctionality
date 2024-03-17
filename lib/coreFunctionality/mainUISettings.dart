@@ -1,8 +1,17 @@
+// import 'dart:js';
 import 'dart:ui';
+
+import 'package:flutter/material.dart';
+
 
 Color mainColor = const Color.fromARGB(255, 27, 26, 26);
 Color secondaryColor = Color.fromARGB(255, 207, 84, 84);
-Color tertiaryColor = const Color.fromARGB(255, 255, 255, 255);
+Color tertiaryColor = Color.fromARGB(255, 255, 255, 255);
+
+double smallTextModifier = 0.025;
+double mediumTextModifier = 0.05;
+double largeTextModifier = 0.07;
+
 double textAdaptModifier = 0.0009;
 
 // =========================================================================================================================================
