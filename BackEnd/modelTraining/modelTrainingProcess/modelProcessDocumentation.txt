@@ -1,0 +1,213 @@
+# THIS IS THE DOCUMENTATION FOR THE OVERALL TRAINING PROCESS. SOME FUNCTIONS MAY NOT BE MENTIONED HERE, BUT LATER APPEARED BELOW, THESE FUNCTIONS MAY EITHER BE NOT A
+# CORE FUNCTION(ONLY DOES MINOR PROCESS LIKE TALLYING) OR VARIATION(OLD VERSIONS) OF OTHER FUNCTIONS. PARAMETERS USED FOR EACH FUNCTIONS WERE NOT MENTIONED, THESE
+# EXPLANATIONS FOCUSES ON HOW IT WORKS AND THE LOGIC OF EACH FUNCTIONS. REFER TO THE FUNCTION FOR THE PARAMETERS USED.
+
+# REFER TO fitGuide(BackUp) for all the experimental
+
+# Current process implemented ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# pre process data from txt file converted into variable
+# getting of outliers through Z-score,common length sequence,
+# augmentation of data:
+#   - Padding of sequences
+#   - coordinates adversary augmentation ( augments the coordinates correct/base data to intentionally make it wrong, in this way we can control how sensetive our model ) -> this resovles the problem of the model needing for a perfect execution to be considered correct
+#   - sequence adversary augmentation ( same thing but only this time its the seuqnce ) -> this resovles the problem of the model needing for a perfect execution to be considered correct
+#   - SMOTE (this is a function that creates synthetic data from our base date to create more training data)
+#   - Data partitioning (training data,validation data,2nd validation data)
+#   - TRAINING (LOOP):
+#        - model training with hyperparameter optimization
+#        -model conversion from tf -> tflite
+#        -validation with output shown
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Data format-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Execution -> the whole exercise performed
+# Sequence -> frame by frame of the execution (NOTE: MAY VARY DEPENDING ON THE PERFORMANCE OF THE DEVICE)
+# Coordinates -> individual coordinates that represents the location of each parts of the body
+
+# 66 coordinates:
+# 0 -> Nose                     17 -> left pinky
+# 1 -> left eye inner           18 -> right pinky
+# 2 -> left eye                 19->left index
+# 3  -> left eye outer          20 -> right index
+# 4 -> right eye inner          21 -> left thumb
+# 5 -> right eye                22 -> right thumb
+# 6 -> right eye outer          23 -> left hip
+# 7 -> left ear                 24 -> right hip
+# 8 -> right ear                25 -> left knee
+# 9 -> mouth left               26 -> right knee
+# 10 -> mouth right             27 -> left ankle
+# 11 -> left shoulder           28 -> right ankle
+# 12 -> right shoulder          29 -> left heel
+# 13 -> left elbow              30 -> right heel
+# 14 -> right elbow             31 -> left foot index
+# 15 -> left wrist              32 -> right foot index
+# 16 -> right wrist
+
+# This is how coordinates are divided into:
+# left arm -> [11,13,15]
+# right arm -> [12,14,16]
+
+# body -> [11,23,12,24,]
+
+# left leg -> [23,25,27]
+# right leg -> [24,26,28]
+
+# head -> [4,1,10,9] (not really sure on this part...need to review but 4 coordinates was use on this)
+
+# NOTE: all of the coordinates are all being used in the process although some of it are irrelevant. Future iteration should take into account this to lessen the training time and complexity
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# HOW DOES PRE PROCESS DATE FROM TXT FILE TO VARIABLE WORK?:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# START is where the execution starts
+# END is where the execution ends
+# Sequences are the lines in between END and START
+# Coordinates are separted by |
+
+# EXAMPLE:
+# START  <--------------------------------  start of the executions
+# 0.5|0.756|0.6456|0.34  <----------------- individual sequences
+# 0.5|0.756|0.6456|0.34  <----------------- | separates individual coordinates
+# 0.5|0.756|0.6456|0.34
+# 0.5|0.756|0.6456|0.34
+# END   <--------------------------------  end of the executions
+
+#VVVVVVVVVVVVVVVVVVVVVVVVVVVVVV--[CONVERSION]--VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+# 0.5|0.756|0.6456|0.34  ==  [0.5,0.756,0.6456,0.34] <-------sequences and individual coordinates
+
+# 0.5|0.756|0.6456|0.34----|
+# 0.5|0.756|0.6456|0.34    |
+# 0.5|0.756|0.6456|0.34    |------------> [[0.5,0.756,0.6456,0.34],[0.5,0.756,0.6456,0.34],[0.5,0.756,0.6456,0.34],[0.5,0.756,0.6456,0.34]]   <---- this is one execution
+# 0.5|0.756|0.6456|0.34----|
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# HOW DOES OUTLIER DETECTION(COMMON LENGTH SEQUENCE) WORK?--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Introduction: this removes the outlier of the executions based on the amount of sequence length
+# why do this?: this removes potential executions that were accidentally created when collecting data and also removes inconsistency. This creates a better model if done well but we should also be cautious about it since if we were to remove exesively then we would loose vital data.
+
+# EXAMPLE
+#  Threshold -> 2(default=5) - this is the threshold of the frequency if it is below this threshold then it would be considered as an outlier
+#  [4,3,6,7,3,1,6,8,9,4,6,3,4] - sample number of length
+
+# freuency found:
+#  length  |   frequency
+#    4            3
+#    3            3
+#    6            3
+#    7            1
+#    1            1
+#    8            1
+#    9            1
+# outlier -> 9,8,1,7
+# common ->4,3,6
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# HOW DOES OUTLIER DETECTION(Z-SCORE) WORK?----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Introduction:This removes the outlier of the executions based on the z-score value of each distinct seuqnce length.
+# Why do this?: Same with Common Length Sequence, it removes accidentally created data when collecting and also removes inconsisency.
+
+# Example:
+# [2,4,5,6,9,10] -> distinct length value
+# z-scord theshold -> 1 (default=1)
+# standard deviation -> 2.77 (please verify not sure about the value)
+# mean -> 6
+# distinct length | z-score
+# 2 ---- 1.44
+# 4 ---- 0.72
+# 5 ---- 0.36
+# 6 ---- 0
+# 9 ---- 1.08
+# 10 ---- 1.44
+
+# [4,5,6] <--- remaining data with this length
+# [2,9,10] <--- removed data with this length
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# HOW DOES PADDING WORK?:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Introduction : not all executions have the same sequences/frame which means each executions may vary in the duration of the execution
+# why do this? : model only accepts the amount of length predefined before training. In order to take into account varied length of sequences padding is necessary.
+# Example:
+#   0 --> coordinates
+#   [] ---> sequences
+#   {} ---> executions
+# {[0,0,0],[0,0,0],[0,0,0]} <--------------------- 3 sequences (fast execution)
+# {[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]} <----- 5 sequences (slow execution)
+# {[0,0,0],[0,0,0],[0,0,0][0,0,0]} <-------------- 4 sequences (normal speed execution)
+#
+# if padding is applied
+#  we get the max length of all the execution to set as basis for every sequences
+# X ---> dummy value from padding
+
+# {[0,0,0],[0,0,0],[0,0,0],[X,X,X],[X,X,X]}
+# {[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]}
+# {[0,0,0],[0,0,0],[0,0,0],[0,0,0],[X,X,X]}
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# HOW DOES COORDINATES ADVERSARY AUGMENTATION WORK? -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Introduction : this is to address of the preverious issue of the model sensetivity to data ( would only output correct if input execution is pixel perfect to what it was trained). A function will randomly pick a coordinate and give new value to it based on the specification
+# why do this? : 1) to create more data both correct and incorrect execution 2)in order for the model to be more forgiving on the execution (or we can manipulate how sensetive it is)
+
+# suppose we have a single coordinate value of 0.5 we can specify the augmentation to +-0.05 soo possible value for the new augmented data would be in the range of 0.45 - 0.55
+# by specifying small value for augmentation we can create new correct data with slight difference in coordinates.
+# on the other hand if we specify large value for augmentation we can create incorrect data.
+
+# Example:
+#   0 --> coordinates
+#   [] ---> sequences
+#   {} ---> executions
+#   q ----> Minor augmentation of coordinates
+#   Q ----> Major augmentation of coordinates
+
+# {[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]} <------- base data / correct data
+# {[0,0,q],[0,0,q],[q,q,0],[0,0,q],[q,0,q]} <------- minor coodinate augmented(still somehow correct data) = coordinates
+# {[0,0,Q],[0,0,Q],[Q,Q,0],[0,0,Q],[Q,0,Q]} <------- major coodinate augmented(incorrect data)
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# HOW DOES SEQUENCE ADVERSARY AUGMENTATION WORK?---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Introduction: This is the same with coordinates aversary augmentation but this time it will be with sequences. This randomly picks a sequence in between the first and last sequence then replace it with sequence containing "0" coordinates.
+# why do this? : 1) to create more data both correct and incorrect execution 2)in order for the model to be more forgiving on the execution (or we can manipulate how sensetive it is)
+
+# Example:
+#   0 --> coordinates
+#   [] ---> sequences
+#   {} ---> executions
+#   () ---> augmenteed sequence
+
+# {[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]} <------- base data / correct data
+# {[0,0,0],[0,0,0],[0,0,0],(0,0,0),[0,0,0]} <------- minor augmentation(still somehow correct data)
+# {[0,0,0],[0,0,0],(0,0,0),(0,0,0),[0,0,0]} <------- major augmentation(incorrect data)
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# HOW DOES SMOTE WORK?-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Introduction: SMOTE is a function from a package that creates synthetic data to balance out groups of data.
+# why do this?: to have more data to be used in the model and to balance out the correc and incorrect data.
+
+# Example:
+# currently dont have any idea of the inner workings of the funciton, refer to the actual code for how its use
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# HOW DOES HYPERPARAMETER OPTIMIZATION WORKS?--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Introduction: Hyperparameter optimization revolves around adjusting the parameters based on its previous result. This would loop for a certain amount of time to try and find the best parameter for the model.
+# Why do this?: to alleviate us from having to adjust the parameter by ourselves, by doing so we can have a dynamic training for each data.
+
+# PARAMETERS
+# Units -> number of neuron of layer (possible value = int)
+# Return sequence -> takes into account the previous sequence and the present sequence (possible value = boolean)
+# Dropout rate -> number of neurons to drop randomly (possible value = double)
+# Recurrent Dropout Rate ->  number of neurons to drop randomly in terms of sequence check(i guess?????)(possible value = double)
+# learning rate -> rate of leaning of the model (possible value = double)
+
+
+# Example:
+# define a value range for parameters. This would be the value limit of the hyperparamters when adjusting.
+
+# X ---> First range
+# Y ---> second range
+
+# Q  ---> List of choices
+
+# units = trial.suggest_int(f'lstm_units_layer_{i}', X, Y)
+# return_sequences = trial.suggest_categorical(f'lstm_return_sequences_layer_{i}', [Q, Q])
+# dropout_rate_value = round(trial.suggest_float(f'lstm_dropout_layer_{i}', X, Y)  , 2)
+# recurrent_dropout_rate_value = round(trial.suggest_float(f'lstm_recurrent_dropout_layer_{i}', X, Y), 2)
+# learning_rate = trial.suggest_float('learning_rate', X, Y)
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
