@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 // Note: heavy imports...may cause lots of load times in between running
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/coreFunctionality/custom_widgets/videoPreview.dart';
+import 'package:frontend/coreFunctionality/modes/dataCollection/services/provider_collection.dart';
 import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
@@ -19,9 +21,10 @@ import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import '../../misc/painters/pose_painter.dart';
 import 'package:frontend/coreFunctionality/misc/poseWidgets/detector_view.dart';
 import '../../logicFunction/isolateProcessPDV.dart';
-import '../../extraWidgets/customWidgetPDV.dart';
+// import '../../extraWidgets/customWidgetPDV.dart';
 import '../../mainUISettings.dart';
-import '../../logicFunction/processLogic.dart';
+import 'inferencingP1.dart';
+// import '../../logicFunction/processLogic.dart';
 
 class inferencingSeamless extends ConsumerStatefulWidget {
   final List<Map<String, dynamic>> exerciseList;
@@ -47,12 +50,6 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
   late int setsNeeded;
   late int restDuration;
 
-  // String model = 'assets/models/wholeModel/converted_model_whole_model3637(loss_0.148)(acc_0.947).tflite';
-  // int numberOfExecution = 5;
-  // String nameOfExercise = "testsgdgf";
-  // int setsNeeded = 3;
-  // int restDuration=30;
-
   // ---------------------inferencing mode variables----------------------------------------------------------
   // isolate initialization for heavy process
   RootIsolateToken rootIsolateTokenNormalization = RootIsolateToken.instance!;
@@ -60,7 +57,7 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
   RootIsolateToken rootIsolateTokenInferencing = RootIsolateToken.instance!;
 
 // THIS IS TEMPORARY FOR DEBUGGING ONLY! CHANGE THIS TO ACTUAL INPUT REQUIRED
-  int tensorInputNeeded = 5;
+  int tensorInputNeeded = 9;
 
   List<double> prevCoordinates = [];
   List<double> currentCoordinates = [];
@@ -83,7 +80,7 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
   List<Map<String, dynamic>> queueInferencingData = [];
   int noMovementCtr = 0;
 
-  List<Map<String, dynamic>> itemsContainer = [];
+  // List<Map<String, dynamic>> itemsContainer = [];
 
   // ---------------------countdown variables----------------------------------------------------------
   late int _seconds;
@@ -104,10 +101,14 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
   int buffer = 0;
   int bufferCtr = 0;
 
+  late int inferencingBuffer;
   // ---------------------inferencing data mode variables----------------------------------------------------------
   int inferenceCorrectCtr = 0;
   int setsAchieved = 0;
   int exerciseListCtr = 0;
+
+  late int maxExerciseList;
+  late List<Map<String, dynamic>> tempExerciseList;
 
   // ---------------------countdown variables----------------------------------------------------------
   final CountDownController _controller = CountDownController();
@@ -154,7 +155,17 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
   }
 
   Future<void> _processImage(InputImage inputImage) async {
-    // createFile();
+    if (maxExerciseList == exerciseListCtr) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => inferencingP1(
+            exerciseProgram: tempExerciseList,
+          ),
+          // const collectionDataP2(),
+        ),
+      );
+    }
 
     if (!_canProcess) return;
     if (_isBusy) return;
@@ -348,15 +359,20 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
       inferencingList.add(translatedCoordinates);
       translatedCoordinates = [];
     }
-          print("queueInferencingDatalenBefore --> ${queueInferencingData.length}");
 
 // [ISOLATE FUNCTION] INFERENCING ==========================================================================================================================
     if (queueInferencingData.isNotEmpty && nowPerforming == true) {
       inferencingCoordinatesData(queueInferencingData.elementAt(0), model)
           .then((value) {
         if (value == true) {
-          queueInferencingData = [];
-          print("queueInferencingDatalenAfter --> ${queueInferencingData.length}");
+          setState(() {
+            queueNormalizeData = [];
+            queueMovementData = [];
+            queueInferencingData = [];
+          });
+
+          print(
+              "queueInferencingDatalenAfter --> ${queueInferencingData.length}");
           inferenceCorrectCtr++;
           dynamicCountDownColor = Color.fromARGB(255, 3, 104, 8);
         } else {
@@ -553,7 +569,10 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
     Widget displayError2;
 
     // exercise details------------------------------------------------------------
+    maxExerciseList = widget.exerciseList.length;
+
     buffer = ref.watch(bufferProvider);
+
     nameOfExercise = widget.exerciseList[exerciseListCtr]['nameOfExercise'];
     model = widget.exerciseList[exerciseListCtr]['modelPath'];
     video = widget.exerciseList[exerciseListCtr]['videoPath'];
@@ -563,6 +582,8 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
     setsNeeded = widget.exerciseList[exerciseListCtr]['setsNeeded'];
     numberOfExecution =
         widget.exerciseList[exerciseListCtr]['numberOfExecution'];
+
+    inferencingBuffer = (tensorInputNeeded * 0.5).toInt();
 
     final luminanceValue = ref.watch(luminanceProvider);
 
@@ -657,14 +678,9 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
                               color: secondaryColor,
                             ),
                           ),
-                          Text(
-                            textAlign: TextAlign.center,
-                            "${numberOfExecution} executions with ${setsNeeded} sets.",
-                            style: TextStyle(
-                              fontSize: 18.0 * textSizeModif,
-                              fontWeight: FontWeight.w200,
-                              color: tertiaryColor,
-                            ),
+                          VideoPreviewScreen(
+                            videoPath: video,
+                            isInferencingPreview: true,
                           ),
                         ],
                       ),
@@ -766,7 +782,6 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
           // ),
 // -----------------------------------------------------------------------------------------------------------[Progress Container]
 
-// FIX THIS!!!!: why not have the progress bars as child to this?!?!?!? wtf fking stupid MF
           Align(
             alignment: Alignment(0.0, -0.94),
             child: Container(

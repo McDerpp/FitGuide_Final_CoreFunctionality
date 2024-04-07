@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'provider_collection.dart';
+
 String csrfToken = '';
 
 Future<String> getCSRFToken() async {
@@ -112,16 +114,17 @@ void getSessionVariable(String sessionKey) async {
 }
 
 Future<String> getSessionKey() async {
-  final response = await http.get(Uri.parse(
-      'http://192.168.1.18:8000/modelTraining/generate_session_key/'));
+  // final response = await http.get(Uri.parse(
+  //     'http://192.168.1.18:8000/modelTraining/generate_session_key/'));
 
-  if (response.statusCode == 200) {
-    final sessionKey = response.body;
+  // if (response.statusCode == 200) {
+  //   final sessionKey = response.body;
 
-    return sessionKey;
-  } else {
-    throw Exception('Failed to retrieve session key');
-  }
+  //   return sessionKey;
+  // } else {
+  //   throw Exception('Failed to retrieve session key');
+  // }
+  return "0";
 }
 
 void fetchSessionKey() async {

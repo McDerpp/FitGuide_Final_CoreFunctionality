@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:math' as math;
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 
-List<double> paddingList =[];
+List<double> paddingList = [];
 late tfl.Interpreter head;
 double progressT = 1.0;
 
@@ -47,11 +47,9 @@ Future<bool> inferencingCoordinatesData(
     Map<String, dynamic> inputs, String modelPath) async {
   final head = await tfl.Interpreter.fromAsset(modelPath);
   tfl.Tensor inputDetails = head.getInputTensor(0);
-  
+  print("PDV  --->$inputDetails");
+
   // print("head.getInputTensor(0) ---> ${head.getInputTensor(0)}");
-
-
-
 
   bool isCorrect = false;
   List<List<double>> tempArray = [];
@@ -59,21 +57,23 @@ Future<bool> inferencingCoordinatesData(
   var output = List.generate(1, (index) => List<double>.filled(1, 0));
 
   List<List<double>> coordinates = inputs['coordinatesData'];
-  coordinates = padding(coordinates, 5);
+  coordinates = padding(coordinates, 9);
 
   var testtestset = head.getInputTensors();
 
   try {
     head.run(coordinates, output);
     print("output of inferencing( ---> $output");
-  } catch (error) {}
+  } catch (error) {
+    print("error at inferencing ---> $error");
+  }
 
   try {
     head.runInference(coordinates);
     print("runInference ---> $output");
   } catch (error) {}
-
-  if (output.elementAt(0).elementAt(0) >= .50) {
+// threshold
+  if (output.elementAt(0).elementAt(0) >= .95) {
     return true;
   } else {
     return false;

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/coreFunctionality/extraWidgets/customWidgetPDV.dart';
+import 'package:frontend/coreFunctionality/custom_widgets/customButton.dart';
+import 'package:frontend/coreFunctionality/custom_widgets/customWidgetPDV.dart';
+import 'package:frontend/coreFunctionality/modes/dataCollection/screens/collectionDataP4.dart';
 import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
 import 'package:frontend/coreFunctionality/modes/dataCollection/services/api.dart';
 import 'package:showcaseview/showcaseview.dart';
+
+import '../services/provider_collection.dart';
 
 class collectionDataP3 extends ConsumerStatefulWidget {
   const collectionDataP3({super.key});
@@ -73,14 +77,124 @@ class _collectionDataP3State extends ConsumerState<collectionDataP3> {
     );
   }
 
+  Widget customText({
+    required screenWidth,
+    required textSizeModif,
+    required value,
+    required text1,
+    required text2,
+    bool isMain = false,
+    sizeModif = 1,
+  }) {
+    double letterSpacing = -0.5;
+    return Container(
+      child: Row(
+        mainAxisAlignment:
+            isMain == true ? MainAxisAlignment.start : MainAxisAlignment.end,
+        children: [
+          Text(
+            value.toString(),
+            style: TextStyle(
+              letterSpacing: letterSpacing - .10,
+              color: ref.watch(tertiaryColorState),
+              fontSize:
+                  screenWidth * 3 * textSizeModif["largeText"]! * sizeModif,
+            ),
+          ),
+          // -------------------------------------------------[executions performed]
+          Column(
+            children: [
+              Text(
+                text1,
+                style: TextStyle(
+                  letterSpacing: letterSpacing,
+                  color: ref.watch(tertiaryColorState),
+                  fontSize:
+                      screenWidth * textSizeModif["smallText"]! * sizeModif,
+                ),
+              ),
+              Text(
+                text2,
+                style: TextStyle(
+                  letterSpacing: letterSpacing,
+                  color: ref.watch(tertiaryColorState),
+                  fontSize:
+                      screenWidth * textSizeModif["smallText"]! * sizeModif,
+                ),
+              ),
+              Text(
+                "",
+                style: TextStyle(
+                  letterSpacing: letterSpacing,
+                  color: ref.watch(tertiaryColorState),
+                  fontSize:
+                      screenWidth * textSizeModif["smallText"]! * sizeModif,
+                ),
+              ),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Color darkenColor(Color color, double factor) {
+    assert(factor >= 0 && factor <= 1, 'Factor must be between 0 and 1');
+    int red = (color.red * (1 - factor)).round().clamp(0, 255);
+    int green = (color.green * (1 - factor)).round().clamp(0, 255);
+    int blue = (color.blue * (1 - factor)).round().clamp(0, 255);
+    return Color.fromRGBO(red, green, blue, 1);
+  }
+
+  Widget customCheckBox({
+    required bool value,
+    required String label,
+    required double width,
+    required double height,
+    required double spacing,
+  }) {
+    return Column(
+      children: [
+        Container(
+          height: height,
+          width: width,
+          decoration: BoxDecoration(
+            color: darkenColor(ref.watch(tertiaryColorState), 0.2),
+            borderRadius: BorderRadius.circular(10.0),
+            border: Border.all(
+              width: 1.0,
+            ),
+          ),
+          child: Row(
+            children: [
+              Checkbox(
+                fillColor:
+                    MaterialStateProperty.all(ref.watch(secondaryColorState)),
+                checkColor: ref.watch(tertiaryColorState),
+                value: value,
+                onChanged: (bool? value) {},
+              ),
+              Text(label)
+            ],
+          ),
+        ),
+        SizedBox(
+          height: spacing,
+        ),
+      ],
+    );
+  }
+
   Widget customTextField(
       {required String label,
       required String hintText,
       required double width,
+      required double height,
       required String variable
       // required double height,
       }) {
     return Container(
+      height: height,
       width: width,
       decoration: BoxDecoration(
         color: ref.watch(tertiaryColorState),
@@ -128,123 +242,227 @@ class _collectionDataP3State extends ConsumerState<collectionDataP3> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
+    Map<String, double> textSizeModif = ref.watch(textSizeModifier);
 
     return ShowCaseWidget(
       builder: Builder(
         builder: (BuildContext context) {
           return Scaffold(
             body: SingleChildScrollView(
-              child: Container(
-                height: screenHeight,
-                width: screenWidth,
-                color: ref.watch(mainColorState),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: screenHeight * 0.1,
-                    ),
-                    SizedBox(
-                      width: screenWidth,
-                    ),
-                    customTextField(
-                        label: "Exercise Name",
-                        hintText: "Push-Up",
-                        width: screenWidth * .9,
-                        variable: "exerciseName"),
-                    SizedBox(
-                      height: screenWidth * 0.02,
-                    ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        customTextField(
-                          label: "Execution",
-                          hintText: "Push-Up",
-                          width: screenWidth * .44,
-                          variable: "executionNum",
-                        ),
-                        SizedBox(
-                          width: screenWidth * 0.02,
-                        ),
-                        customTextField(
-                          label: "Sets",
-                          hintText: "Push-Up",
-                          width: screenWidth * .44,
-                          variable: "setsNum",
-                        ),
-                      ],
-                    ),
-                    SizedBox(
-                      height: screenWidth * 0.02,
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      decoration: BoxDecoration(
-                        color: ref.watch(tertiaryColorState),
-                        borderRadius: BorderRadius.circular(10.0),
-                        border: Border.all(
-                          width: 1.0,
-                        ),
-                      ),
-                      width: screenWidth * .9,
-                      child: DropdownButton<String>(
-                        value: partsAffected,
-                        icon: const Icon(Icons.arrow_downward),
-                        elevation: 16,
-                        isExpanded: true,
-                        onChanged: (String? value) {
-                          print("dropdown value ---> $value");
-                          setState(() {
-                            partsAffected = value!;
-                            ref.read(partsAffectedProvider.notifier).state =
-                                partsAffected;
-              
-                          });
-                        },
-                        items:
-                            parts.map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    SizedBox(
-                      height: screenWidth * 0.02,
-                    ),
-                    customLargeTextField(
-                        label: "Description(OPTIONAL)",
-                        hintText: "What this exercise is about.",
-                        width: screenWidth * 0.9,
-                        variable: "description"),
-                    SizedBox(
-                      height: screenWidth * 0.02,
-                    ),
-                    customLargeTextField(
-                      label: "Extra Notes(OPTIONAL)",
-                      hintText: "What this exercise is about.",
-                      width: screenWidth * 0.9,
-                      variable: "extraNote",
-                    ),
-                    buildElevatedButton(
-                      context: context,
-                      label: "Submit",
-                      colorSet: ref.watch(ColorSet)["ColorSet1"]!,
-                      textSizeModifierIndividual:
-                          ref.watch(textSizeModifier)["smallText"]!,
-                      func: () {
-                        setState(() {});
-                        collectDatasetInfo(ref);
-                        // Update the AlertDialog content
-                      },
-                    ),
-                  ],
+                child: Stack(
+              children: [
+                SizedBox(
+                  height: screenHeight * 0.4,
                 ),
-              ),
-            ),
+                Container(
+                  color: ref.watch(mainColorState),
+                  height: screenHeight,
+                  width: screenWidth,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        height: screenHeight * 0.27,
+                      ),
+                      Text(
+                        "Exercise Details",
+                        style: TextStyle(
+                            color: ref.watch(tertiaryColorState),
+                            fontSize:
+                                screenWidth * textSizeModif["largeText"]!),
+                      ),
+                      SizedBox(
+                        height: screenHeight * 0.03,
+                      ),
+                      customTextField(
+                          label: "Exercise Name",
+                          hintText: "Push-Up",
+                          width: screenWidth * .9,
+                          height: screenWidth * .25,
+                          variable: "exerciseName"),
+                      SizedBox(
+                        height: screenWidth * 0.02,
+                      ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          customTextField(
+                            label: "Execution",
+                            hintText: "Push-Up",
+                            width: screenWidth * .44,
+                            height: screenWidth * .25,
+                            variable: "executionNum",
+                          ),
+                          SizedBox(
+                            width: screenWidth * 0.02,
+                          ),
+                          customTextField(
+                            label: "Sets",
+                            hintText: "Push-Up",
+                            width: screenWidth * .44,
+                            height: screenWidth * .25,
+                            variable: "setsNum",
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: screenWidth * 0.02,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Column(
+                            children: [
+                              customCheckBox(
+                                value: ref.watch(headBoolState),
+                                label: 'Head',
+                                width: screenWidth * .44,
+                                height: screenWidth * .10,
+                                spacing: screenWidth * 0.02,
+                              ),
+                              customCheckBox(
+                                value: ref.watch(leftLegBoolState),
+                                label: 'Left Leg',
+                                width: screenWidth * .44,
+                                height: screenWidth * .10,
+                                spacing: screenWidth * 0.02,
+                              ),
+                              customCheckBox(
+                                value: ref.watch(leftArmBoolState),
+                                label: 'Left Arm',
+                                width: screenWidth * .44,
+                                height: screenWidth * .10,
+                                spacing: screenWidth * 0.02,
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                            width: screenWidth * 0.02,
+                          ),
+                          Column(
+                            children: [
+                              customCheckBox(
+                                value: ref.watch(bodyBoolState),
+                                label: 'Body',
+                                width: screenWidth * .44,
+                                height: screenWidth * .10,
+                                spacing: screenWidth * 0.02,
+                              ),
+                              customCheckBox(
+                                value: ref.watch(rightArmBoolState),
+                                label: 'Right Arm',
+                                width: screenWidth * .44,
+                                height: screenWidth * .10,
+                                spacing: screenWidth * 0.02,
+                              ),
+                              customCheckBox(
+                                value: ref.watch(rightArmBoolState),
+                                label: 'Right Leg',
+                                width: screenWidth * .44,
+                                height: screenWidth * .10,
+                                spacing: screenWidth * 0.02,
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+                      SizedBox(
+                        height: screenHeight * 0.12,
+                      ),
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            buildElevatedButton(
+                              context: context,
+                              label: "Submit",
+                              colorSet: ref.watch(ColorSet)["ColorSet1"]!,
+                              textSizeModifierIndividual:
+                                  ref.watch(textSizeModifier)["smallText2"]!,
+                              func: () {
+                                setState(() {});
+                                collectDatasetInfo(ref);
+
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const collectionDataP4(),
+                                    // const collectionDataP2(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ])
+                    ],
+                  ),
+                ),
+                Container(
+                  height: screenHeight * 0.25,
+                  width: screenWidth,
+                  decoration: BoxDecoration(
+                    color: ref.watch(secondaryColorState),
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment:
+                        MainAxisAlignment.center, // Align children at the start
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          customText(
+                              screenWidth: screenWidth,
+                              textSizeModif: textSizeModif,
+                              value: ref.watch(numExec),
+                              text1: "Executions",
+                              text2: "Performed",
+                              sizeModif: 1,
+                              isMain: true),
+                          SizedBox(
+                            width: screenWidth * 0.05,
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment
+                                .start, // Align children at the start
+                            children: [
+                              customText(
+                                screenWidth: screenWidth,
+                                textSizeModif: textSizeModif,
+                                value: ref.watch(maxFrameState),
+                                text1: "Max",
+                                text2: "Frame",
+                                sizeModif: 0.5,
+                                isMain: false,
+                              ),
+                              customText(
+                                screenWidth: screenWidth,
+                                textSizeModif: textSizeModif,
+                                value: ref.watch(minFrameColorState),
+                                text1: "Min",
+                                text2: "Frame",
+                                sizeModif: 0.5,
+                                isMain: false,
+                              ),
+                              customText(
+                                screenWidth: screenWidth,
+                                textSizeModif: textSizeModif,
+                                value: ref.watch(averageFrameState),
+                                text1: "Average",
+                                text2: "Frame",
+                                sizeModif: 0.5,
+                                isMain: false,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            )),
           );
         },
       ),

@@ -10,24 +10,28 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
+// Note: heavy imports...may cause lots of load times in between running
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/coreFunctionality/modes/dataCollection/process/isolates/check_movement.dart';
-import 'package:frontend/coreFunctionality/modes/dataCollection/process/isolates/coordinates_relative.dart';
 import 'package:frontend/coreFunctionality/modes/dataCollection/services/api.dart';
 import 'package:frontend/coreFunctionality/custom_widgets/cwIgnorePose.dart';
-import 'package:frontend/coreFunctionality/modes/dataCollection/services/provider_collection.dart';
-import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
 import '../../../custom_widgets/executionAnalysis.dart';
+import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 import 'package:showcaseview/showcaseview.dart';
 
+// UI related imports
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 
+// file imports
 import '../../../misc/painters/pose_painter.dart';
 import 'package:frontend/coreFunctionality/misc/poseWidgets/detector_view.dart';
+import '../../../logicFunction/isolateProcessPDV.dart';
 import '../../../mainUISettings.dart';
+import '../process/process.dart';
+import '../services/provider_collection.dart';
+import 'collectionData.dart';
 
 class collectionData extends ConsumerStatefulWidget {
   const collectionData({
@@ -221,221 +225,14 @@ class _collectionDataState extends ConsumerState<collectionData> {
 // // ==================================[isolate function processImage ]==================================
     try {
       poses = await _poseDetector.processImage(inputImage);
-
-      Map<String, dynamic> dataNormalizationIsolate = {
-        'inputImage': poses.first.landmarks.values,
-        'token': rootIsolateTokenNormalization,
-        'coordinatesIgnore': ignoreCoordinatesInitialized,
-      };
-      // for (int ctrCheck = 0;
-      //     ctrCheck >= poses.first.landmarks.values.length;
-      //     ctrCheck++) {
-      //   print(
-      //       "ctrCheckLikelihood ---> ${poses.first.landmarks.values.elementAt(ctrCheck).likelihood}");
-      // }
-      queueNormalizeData.add(dataNormalizationIsolate);
     } catch (error) {
       print("error at proces image ---> $error");
     }
 
-// // ==================================[isolate function forcoordinatesRelativeBoxIsolate ]==================================
-    bufferCtr++;
-    if (queueNormalizeData.isNotEmpty) {
-      if (bufferCtr >= buffer) {
-        bufferCtr = 0;
-        compute(coordinatesRelativeBoxIsolate, queueNormalizeData.elementAt(0))
-            .then((value) {
-          queueNormalizeData.removeAt(0);
-          tempPrevCurr.add(value['translatedCoordinates']);
-
-          if (nowPerforming == true) {
-            temp = value['translatedCoordinates'];
-          }
-
-          setState(() {
-            allCoordinatesPresent = value['allCoordinatesPresent'];
-          });
-
-          if (tempPrevCurr.length > 1) {
-            prevCoordinates = tempPrevCurr.elementAt(0);
-            currentCoordinates = tempPrevCurr.elementAt(1);
-
-            Map<String, dynamic> checkMovementIsolate = {
-              'prevCoordinates': prevCoordinates,
-              'currentCoordinates': currentCoordinates,
-              'token': rootIsolateTokenNoMovement,
-            };
-            queueMovementData.add(checkMovementIsolate);
-            tempPrevCurr.removeAt(0);
-          }
-        }).catchError((error) {
-          print("Error at coordinate relative ---> $error");
-        });
-      } else {
-        queueNormalizeData.removeAt(0);
-        print("buffering...");
-      }
-    }
-
-// // ==================================[isolate function forcoordinatesRelativeBoxIsolate ]==================================
-
-// // ==================================[isolate function checkMovement ]==================================
-    if (queueMovementData.isNotEmpty) {
-      compute(checkMovement, queueMovementData.elementAt(0))
-          .then((value) async {
-        queueMovementData.removeAt(0);
-
-        if (value == true && checkFramesCaptured == false) {
-          checkFramesCaptured = true;
-
-          if (nowPerforming == true) {
-            isDataCollected = true;
-            if (inferencingList.isNotEmpty) {
-              executionStateResult = 2;
-
-              setState(() {
-                executionStateResult = 2;
-              });
-              dynamicCountDownText = 'collected';
-              dynamicCountDownColor = secondaryColor;
-              coordinatesData.add(inferencingList);
-
-              execTotalFrames = execTotalFrames + inferencingList.length;
-
-              if (minFrame == 0) {
-                minFrame = inferencingList.length;
-                ref.read(minFrameState.notifier).state = minFrame;
-              }
-
-              if (minFrame > inferencingList.length) {
-                minFrame = inferencingList.length;
-                ref.read(minFrameState.notifier).state = minFrame;
-                print("minFrame ---> $minFrame ");
-              }
-
-              if (maxFrame < inferencingList.length) {
-                maxFrame = inferencingList.length;
-                ref.read(maxFrameState.notifier).state = maxFrame;
-                print("maxFrame ---> $maxFrame ");
-              }
-
-              numExec++;
-            }
-
-            inferencingList = [];
-          }
-          // }
-        } else if (value == false) {
-          if (nowPerforming == true) {
-            executionStateResult = 1;
-
-            setState(() {
-              executionStateResult = 1;
-            });
-            dynamicCountDownText = 'collecting';
-            dynamicCountDownColor = Colors.blue;
-            checkFramesCaptured = false;
-
-            if (temp.isNotEmpty) {
-              inferencingList.add(temp);
-            }
-            isDataCollected = false;
-            temp = [];
-          }
-        }
-
-        if (value == true) {
-          // -----------------checking for movement before executing for collecting data--------------------------------------
-          if (nowPerforming == false) {
-            if (countDowntoPerform == false) {
-              _controller.start();
-              countDowntoPerform = true;
-              dynamicCountDownText = 'Perform';
-            }
-          }
-
-          if (_controller.getTime().toString() == "3" &&
-              nowPerforming == false) {
-            nowPerforming = true;
-          }
-
-          noMovementCtr = 0;
-
-          setState(
-            () {
-              dynamicText = 'no movement detected';
-              try {} catch (error) {
-                minFrame = 0;
-              }
-
-              dynamicCtr = noMovementCtr.toString();
-              try {
-                avgFrames = execTotalFrames / numExec;
-                resultAvgFrames = avgFrames.toStringAsFixed(2);
-                avgFrames = double.parse(resultAvgFrames);
-                ref.read(averageFrameState.notifier).state = avgFrames;
-
-                if (avgFrames <= ref.watch(averageThresholdBad)) {
-                  averageColor = Colors.red;
-                } else if (avgFrames >= ref.watch(averageThresholdBad) &&
-                    avgFrames <= ref.watch(averageThresholdIdeal)) {
-                  averageColor = Colors.orange;
-                } else if (avgFrames >= ref.watch(averageThresholdIdeal)) {
-                  averageColor = Colors.green;
-                }
-                ref.read(averageColorState.notifier).state = averageColor;
-              } catch (error) {
-                avgFrames = 0;
-              }
-
-              try {
-                if (minFrame <= ref.watch(minFrameThresholdBad)) {
-                  minFrameColor = Colors.red;
-                } else if (minFrame >= ref.watch(minFrameThresholdBad) &&
-                    minFrame <= ref.watch(minFrameThresholdIdeal)) {
-                  minFrameColor = Colors.orange;
-                } else if (minFrame >= ref.watch(minFrameThresholdIdeal)) {
-                  minFrameColor = Colors.green;
-                }
-                ref.read(minFrameColorState.notifier).state = minFrameColor;
-              } catch (error) {
-                minFrame = 0;
-              }
-
-              try {
-                if (maxFrame <= ref.watch(maxFrameThresholdBad)) {
-                  maxFrameColor = Colors.red;
-                } else if (maxFrame >= ref.watch(maxFrameThresholdBad) &&
-                    maxFrame <= ref.watch(maxFrameThresholdIdeal)) {
-                  maxFrameColor = Colors.orange;
-                } else if (maxFrame >= ref.watch(maxFrameThresholdIdeal)) {
-                  maxFrameColor = Colors.green;
-                }
-                ref.read(maxFrameColorState.notifier).state = maxFrameColor;
-              } catch (error) {
-                maxFrame = 0;
-              }
-            },
-          );
-        } else {
-          // -----------------checking for movement before executing for collecting data--------------------------------------
-
-          if (nowPerforming == false) {
-            if (countDowntoPerform == true) {
-              _controller.reset();
-              countDowntoPerform = false;
-            }
-          }
-          // -----------------------------------------------------------------------------------------------------------
-
-          setState(() {
-            dynamicText = 'movement detected';
-            dynamicCtr = noMovementCtr.toString();
-          });
-        }
-      }).catchError((error) {
-        print("Error at checkMovement ---> $error");
-      });
+    try {
+      HeavyProcess(poses);
+    } catch (error) {
+      print("error at heavy process --> $error");
     }
 
     if (inputImage.metadata?.size != null &&
@@ -457,6 +254,16 @@ class _collectionDataState extends ConsumerState<collectionData> {
     if (mounted) {
       setState(() {});
     }
+
+
+
+
+
+
+
+
+
+
   }
 
   void undoExecution(int undoTimes) {
@@ -653,25 +460,6 @@ class _collectionDataState extends ConsumerState<collectionData> {
     var textSizeModifierSet = ref.watch(textSizeModifier);
     var textSizeModifierSetIndividual = textSizeModifierSet["smallText"]!;
 
-    // colorSet1 = {
-    //   "mainColor": color1,
-    //   "secondaryColor": color2,
-    //   "tertiaryColor": color3,
-    // };
-
-    // colorSet2 = {
-    //   "mainColor": color1,
-    //   "secondaryColor": color3,
-    //   "tertiaryColor": color2,
-    // };
-
-    // headColor = colorSet1;
-    // leftArmColor = colorSet1;
-    // rightArmColor = colorSet1;
-    // leftLegColor = colorSet1;
-    // rightLegColor = colorSet1;
-    // bodyColor = colorSet1;
-
     final luminanceValue = ref.watch(luminanceProvider);
 
     if (nowPerforming == true) {
@@ -697,19 +485,11 @@ class _collectionDataState extends ConsumerState<collectionData> {
           return Scaffold(
             body: Stack(
               children: [
-                // Container(
-                //   color: Colors.amber,
-                //   width: screenWidth,
-                //   height: screenHeight,
-                // ),
-
                 Align(
                   alignment: Alignment.topCenter,
-                  // Set top to 0 to cover the entire screen from the top
                   child: Container(
-                    width: screenWidth, // Set a specific width
-                    height:
-                        screenHeight, // Set a specific height or use constraints
+                    width: screenWidth,
+                    height: screenHeight,
                     child: DetectorView(
                       title: 'Pose Detector',
                       customPaint: _customPaint,
@@ -721,21 +501,7 @@ class _collectionDataState extends ConsumerState<collectionData> {
                     ),
                   ),
                 ),
-
-                // Positioned(
-                //   bottom: screenHeight * 0.17,
-                //   child: Container(
-                //     color: Colors.amber,
-                //     width: screenWidth,
-                //     height: screenHeight,
-                //   ),
-                // ),
                 displayCountdownTimer,
-                // Positioned(
-                //   bottom: screenHeight * .025,
-                //   left: screenWidth * .07,
-                //   child:
-                // ),
                 Align(
                   alignment: Alignment.bottomCenter,
                   child: Container(

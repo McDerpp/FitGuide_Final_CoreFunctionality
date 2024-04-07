@@ -3,15 +3,16 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/coreFunctionality/modes/dataCollection/services/api.dart';
-import 'package:frontend/coreFunctionality/extraWidgets/customWidgetPDV.dart';
-import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
+import 'package:frontend/coreFunctionality/custom_widgets/customButton.dart';
 import 'package:frontend/coreFunctionality/modes/dataCollection/screens/collectionDataP2.dart';
+import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
 import 'package:frontend/coreFunctionality/modes/dataCollection/screens/collectionDataP3.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:http/http.dart' as http;
+
+import '../services/provider_collection.dart';
 
 class collectionDataP1 extends ConsumerStatefulWidget {
   final List<List<List<double>>> input;
@@ -51,8 +52,8 @@ class _collectionDataP1State extends ConsumerState<collectionDataP1> {
     "ARE YOU KIRIN ME?!",
     "???",
     "AI: WHAT KIND OF EXERCISE IS THIS?!",
+    "AI: YOU CALL THIS AN EXERCISE?!",
     "AI: ARE TRYING TO KILL SOMEONE WITH THIS EXERCISE OF YOURS",
-    "AI: I AM MEANT FOR GREATER THINGS! WHY AM I DOING THIS",
     "AI: 01101011 01100001 01110000 01101111 01111001 01100001 00100000 01110100 01101000 01100101 01110011 01101001 01110011 00100000 01101111 01101001",
   ];
 
@@ -138,6 +139,7 @@ class _collectionDataP1State extends ConsumerState<collectionDataP1> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
+
     Map<String, double> textSizeModif = ref.watch(textSizeModifier);
     Color mainColor = ref.watch(mainColorState);
     Color secondaryColor = ref.watch(secondaryColorState);
@@ -152,6 +154,11 @@ class _collectionDataP1State extends ConsumerState<collectionDataP1> {
     return Scaffold(
       body: Stack(
         children: [
+          Container(
+            height: screenHeight,
+            width: screenWidth,
+            color: ref.watch(mainColorState),
+          ),
           Positioned(
             bottom: screenHeight *
                 0.05, // Adjust as needed, considering padding/margin
@@ -168,7 +175,8 @@ class _collectionDataP1State extends ConsumerState<collectionDataP1> {
                       '${seriousFacts[seriousFactsRandIndex]}',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                          fontSize: textSizeModif["smallText2"]! * screenWidth),
+                          fontSize: textSizeModif["smallText2"]! * screenWidth,
+                          color: ref.watch(tertiaryColorState)),
                     ),
                   ),
                 ),
@@ -180,8 +188,8 @@ class _collectionDataP1State extends ConsumerState<collectionDataP1> {
                         child: LinearProgressIndicator(
                           minHeight: 20,
                           backgroundColor: Colors.grey[300],
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.blue),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              ref.watch(secondaryColorState)),
                           value: progressT,
                         ))
                     : Row(
@@ -198,7 +206,7 @@ class _collectionDataP1State extends ConsumerState<collectionDataP1> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) =>
-                                      const collectionDataP3(),
+                                      const collectionDataP2(),
                                   // const collectionDataP2(),
                                 ),
                               );

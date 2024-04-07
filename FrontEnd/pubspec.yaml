@@ -59,6 +59,7 @@ dependencies:
   showcaseview: ^2.0.3
   scroll_snap_list: ^0.9.1
   stop_watch_timer: ^3.1.1
+  animated_widgets: ^1.1.0
   # web_socket_channel: ^2.4.0
   # google_ml_kit: ^4.0.0
 

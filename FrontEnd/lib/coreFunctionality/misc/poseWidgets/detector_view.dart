@@ -56,24 +56,7 @@ class _DetectorViewState extends State<DetectorView> {
             onCameraLensDirectionChanged: widget.onCameraLensDirectionChanged,
           )
         : Placeholder();
-    // : GalleryView(
-    //     title: widget.title,
-    //     text: widget.text,
-    //     onImage: widget.onImage,
-    //     onDetectorViewModeChanged: _onDetectorViewModeChanged);
   }
-  // @override
-  // Widget build(BuildContext context) {
-  //   return CameraView(
-  //     customPaint: widget.customPaint,
-  //     onImage: widget.onImage,
-  //     onCameraFeedReady: widget.onCameraFeedReady,
-  //     onDetectorViewModeChanged: _onDetectorViewModeChanged,
-  //     initialCameraLensDirection: widget.initialCameraLensDirection,
-  //     onCameraLensDirectionChanged: widget.onCameraLensDirectionChanged,
-  //   );
-  // }
-
   void _onDetectorViewModeChanged() {
     if (_mode == DetectorViewMode.liveFeed) {
       _mode = DetectorViewMode.gallery;

@@ -5,16 +5,18 @@ import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/coreFunctionality/extraWidgets/customWidgetPDV.dart';
+import 'package:frontend/coreFunctionality/custom_widgets/customButton.dart';
 import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
 import 'package:frontend/coreFunctionality/logicFunction/isolateProcessPDV.dart';
 import 'package:frontend/coreFunctionality/mainUISettings.dart';
 import 'package:frontend/coreFunctionality/misc/painters/pose_painter.dart';
 import 'package:frontend/coreFunctionality/misc/poseWidgets/detector_view.dart';
-import 'package:frontend/coreFunctionality/modes/globalStuff/widgets/videoPreview.dart';
+import 'package:frontend/coreFunctionality/custom_widgets/videoPreview.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:stop_watch_timer/stop_watch_timer.dart';
+
+import '../services/provider_collection.dart';
 
 class collectionDataP2 extends ConsumerStatefulWidget {
   const collectionDataP2({super.key});
@@ -426,7 +428,7 @@ class _collectionDataP2State extends ConsumerState<collectionDataP2> {
                     ? timerCountDown(context)
                     : noDisplay(),
                 Align(
-                  alignment: Alignment(-0.0, -.88), // Align left horizontally
+                  alignment: Alignment(-0.0, -.83), // Align left horizontally
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -453,7 +455,7 @@ class _collectionDataP2State extends ConsumerState<collectionDataP2> {
                       child: Column(
                         children: [
                           SizedBox(
-                            height: screenHeight * 0.005,
+                            height: screenHeight * 0.01,
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -473,7 +475,7 @@ class _collectionDataP2State extends ConsumerState<collectionDataP2> {
                                       ? colorSet
                                       : colorSet2,
                                   textSizeModifierIndividual: ref
-                                      .watch(textSizeModifier)["smallText2"]!,
+                                      .watch(textSizeModifier)["smallText"]!,
                                   func: () {
                                     isRecording == true ? testrecord() : null;
 
@@ -504,30 +506,7 @@ class _collectionDataP2State extends ConsumerState<collectionDataP2> {
                       )),
                 ),
                 // UIControlsManager(),
-                Align(
-                  alignment: Alignment(0.0, 0.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          Icons.stop,
-                          color: Colors.red,
-                          size: screenWidth * .06, //
-                        ),
-                        onPressed: () => ref.read(recording.notifier).state = 3,
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.start,
-                          color: Colors.red,
-                          size: screenWidth * .06, //
-                        ),
-                        onPressed: () => ref.read(recording.notifier).state = 1,
-                      ),
-                    ],
-                  ),
-                ),
+
                 Align(
                   alignment: Alignment(1.0, 0.78),
                   child: IconButton(

@@ -10,6 +10,8 @@ import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../modes/dataCollection/services/provider_collection.dart';
+
 class CameraView extends ConsumerStatefulWidget {
   CameraView(
       {Key? key,
