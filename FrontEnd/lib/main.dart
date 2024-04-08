@@ -47,42 +47,31 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Map<String, dynamic> exerciseDetail1 = {
-      'nameOfExercise': "Exercise 1",
-      'restDuration': 30,
-      'setsNeeded': 3,
-      'numberOfExecution': 3,
-      'modelPath':
-          'assets/models/wholeModel/converted_model_whole_model4782(loss_0.005)(acc_0.999).tflite',
-      'videoPath': 'assets/videos/jumpNjacksVid.mp4',
+      'nameOfExercise': "Oblique Twist",
+      'restDuration': 15,
+      'setsNeeded': 2,
+      'numberOfExecution': 2,
+      'modelPath': 'assets/models/wholeModel/obliqueTwistV3.tflite',
+      'videoPath': 'FrontEnd/assets/videos/jumpNjacksVid.mp4',
       // still need to implement extraction of ignored coordinates when collecting data!
-      'ignoredCoordinates': ["left_arm", "left_leg"]
+      'ignoredCoordinates': ["left_arm", "left_leg"],
+      'inputNum': 8,
     };
 
     Map<String, dynamic> exerciseDetail2 = {
-      'nameOfExercise': "Exercise 2",
-      'restDuration': 30,
-      'setsNeeded': 4,
-      'numberOfExecution': 3,
-      'modelPath':
-          'assets/models/wholeModel/converted_model_whole_model4782(loss_0.005)(acc_0.999).tflite',
-      'videoPath': 'assets/videos/jumpNjacksVid.mp4',
-      'ignoredCoordinates': ["left_arm", "left_leg"]
-    };
-
-    Map<String, dynamic> exerciseDetail3 = {
-      'nameOfExercise': "Exercise 3",
-      'restDuration': 30,
+      'nameOfExercise': "Jump and Jacks",
+      'restDuration': 15,
       'setsNeeded': 2,
       'numberOfExecution': 2,
       'modelPath':
           'assets/models/wholeModel/converted_model_whole_model4782(loss_0.005)(acc_0.999).tflite',
       'videoPath': 'assets/videos/jumpNjacksVid.mp4',
-      'ignoredCoordinates': ["left_arm", "left_leg"]
+      'ignoredCoordinates': ["left_arm", "left_leg"],
+      'inputNum': 9,
     };
 
     List<Map<String, dynamic>> exerciseProgram1 = [];
     exerciseProgram1.add(exerciseDetail1);
-    exerciseProgram1.add(exerciseDetail3);
     exerciseProgram1.add(exerciseDetail2);
 
     return Scaffold(

@@ -101,6 +101,8 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
   int buffer = 0;
   int bufferCtr = 0;
 
+  List<bool> inferenceBuffer = [];
+
   late int inferencingBuffer;
   // ---------------------inferencing data mode variables----------------------------------------------------------
   int inferenceCorrectCtr = 0;
@@ -155,18 +157,6 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
   }
 
   Future<void> _processImage(InputImage inputImage) async {
-    if (maxExerciseList == exerciseListCtr) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => inferencingP1(
-            exerciseProgram: tempExerciseList,
-          ),
-          // const collectionDataP2(),
-        ),
-      );
-    }
-
     if (!_canProcess) return;
     if (_isBusy) return;
     _isBusy = true;
@@ -243,6 +233,21 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
 
 // =====================================================================================================================================================
 
+    try {
+      if (restState == true && restingInitialized == false) {
+        restingInitialized = true;
+        CountDownController _controller = CountDownController();
+        _controller.restart(duration: 10);
+        print("initializingRest ----? $restingInitialized");
+
+        nowPerforming = false;
+      }
+    } catch (error) {
+      print("ERROR AT NEW IMPLEMENTATION ---> $error");
+      CountDownController _controller = CountDownController();
+      _controller.restart(duration: 10);
+    }
+
 // [ISOLATE FUNCTION] MOVEMENT CHECK ==========================================================================================================================
     if (queueMovementData.isNotEmpty) {
       // false = movement
@@ -251,17 +256,8 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
           .then((value) async {
         queueMovementData.removeAt(0);
 
-        try {
 // if rest state is true but it has not started yet then initialize or start it--------------------------------------------------------------------------
-          if (restState == true && restingInitialized == false) {
-            restingInitialized = true;
-            _controller.restart(duration: 10);
-            nowPerforming = false;
-          }
-        } catch (error) {
-          print("ERROR AT NEW IMPLEMENTATION ---> $error");
-        }
-
+        nowPerforming = true;
         if (value == true) {
 // this is checking for at the start of the exercise if movement is detected or not
 // if detected then it will start countdown otherwise it will restart
@@ -286,6 +282,7 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
               restState == false) {
             nowPerforming = true;
           }
+
 //for recording metrics
           setState(() {
             try {
@@ -316,9 +313,15 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
       nowPerforming = false;
       inferenceCorrectCtr = 0;
       restState = true;
+
+// if all the sets have been performed
       if (setsAchieved == setsNeeded) {
-        exerciseListCtr++;
-        setsAchieved = 0;
+        setState(() {
+          if (exerciseListCtr <= maxExerciseList) {
+            exerciseListCtr++;
+          }
+          setsAchieved = 0;
+        });
       }
     }
 
@@ -362,18 +365,25 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
 
 // [ISOLATE FUNCTION] INFERENCING ==========================================================================================================================
     if (queueInferencingData.isNotEmpty && nowPerforming == true) {
-      inferencingCoordinatesData(queueInferencingData.elementAt(0), model)
+      inferencingCoordinatesData(queueInferencingData.elementAt(0), model,
+              widget.exerciseList[exerciseListCtr]['inputNum'])
           .then((value) {
-        if (value == true) {
-          setState(() {
-            queueNormalizeData = [];
-            queueMovementData = [];
-            queueInferencingData = [];
-          });
+        if (inferenceBuffer.length == 2) {
+          inferenceBuffer.removeAt(0);
+          inferenceBuffer.add(value);
+        } else {
+          inferenceBuffer.add(value);
+        }
+// checking if consecutive inferencing is returing true
+// this is due to the model having diverse inferencing capability(even if one sequence is missing from being removed it can still determine the inference as true, this can be fixed in the mode directly by supplying training with more data which is unrealistic)
 
-          print(
-              "queueInferencingDatalenAfter --> ${queueInferencingData.length}");
-          inferenceCorrectCtr++;
+        if (value == true) {
+          if (inferenceBuffer.elementAt(0) == false &&
+              inferenceBuffer.elementAt(1) == true &&
+              nowPerforming == true) {
+            inferenceCorrectCtr++;
+          }
+
           dynamicCountDownColor = Color.fromARGB(255, 3, 104, 8);
         } else {
           dynamicCountDownColor = Color.fromARGB(255, 255, 0, 0);
@@ -545,11 +555,14 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
           onComplete: () {},
           onChange: (String timeStamp) {},
           timeFormatterFunction: (defaultFormatterFunction, duration) {
-            if (nowPerforming == true) {
-              return dynamicCountDownText;
-            } else {
-              return Function.apply(defaultFormatterFunction, [duration]);
-            }
+            print("duration --> $duration");
+            return Function.apply(defaultFormatterFunction, [duration]);
+
+            // if (nowPerforming == true) {
+            //   return dynamicCountDownText;
+            // } else {
+            //   return Function.apply(defaultFormatterFunction, [duration]);
+            // }
           },
         )
         // countdownTimer(context, dynamicCountDownText,
@@ -570,18 +583,40 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
 
     // exercise details------------------------------------------------------------
     maxExerciseList = widget.exerciseList.length;
-
     buffer = ref.watch(bufferProvider);
-
-    nameOfExercise = widget.exerciseList[exerciseListCtr]['nameOfExercise'];
-    model = widget.exerciseList[exerciseListCtr]['modelPath'];
-    video = widget.exerciseList[exerciseListCtr]['videoPath'];
-    ignoredCoordinates =
-        widget.exerciseList[exerciseListCtr]['ignoredCoordinates'];
-    restDuration = widget.exerciseList[exerciseListCtr]['restDuration'];
-    setsNeeded = widget.exerciseList[exerciseListCtr]['setsNeeded'];
-    numberOfExecution =
-        widget.exerciseList[exerciseListCtr]['numberOfExecution'];
+    try {
+      if (exerciseListCtr <= maxExerciseList) {
+        ref.read(inputNumProvider.notifier).state =
+            widget.exerciseList[exerciseListCtr]['inputNum'];
+        nameOfExercise = widget.exerciseList[exerciseListCtr]['nameOfExercise'];
+        model = widget.exerciseList[exerciseListCtr]['modelPath'];
+        video = widget.exerciseList[exerciseListCtr]['videoPath'];
+        ignoredCoordinates =
+            widget.exerciseList[exerciseListCtr]['ignoredCoordinates'];
+        restDuration = widget.exerciseList[exerciseListCtr]['restDuration'];
+        setsNeeded = widget.exerciseList[exerciseListCtr]['setsNeeded'];
+        numberOfExecution =
+            widget.exerciseList[exerciseListCtr]['numberOfExecution'];
+      } else {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => inferencingP1(
+              exerciseProgram: widget.exerciseList,
+            ),
+          ),
+        );
+      }
+    } catch (error) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => inferencingP1(
+            exerciseProgram: widget.exerciseList,
+          ),
+        ),
+      );
+    }
 
     inferencingBuffer = (tensorInputNeeded * 0.5).toInt();
 
@@ -634,6 +669,18 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
               ),
             ),
           ),
+          Padding(
+            padding: EdgeInsets.all(8.0), // Adjust the value as needed
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                VideoPreviewScreen(
+                  videoPath: video,
+                  isInferencingPreview: true,
+                ),
+              ],
+            ),
+          ),
 
 // -----------------------------------------------------------------------------------------------------------[Current Exercise Description]
           Align(
@@ -673,14 +720,10 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
                             "${nameOfExercise}",
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 25.0 * textSizeModif,
+                              fontSize: 30.0 * textSizeModif,
                               fontWeight: FontWeight.w400,
                               color: secondaryColor,
                             ),
-                          ),
-                          VideoPreviewScreen(
-                            videoPath: video,
-                            isInferencingPreview: true,
                           ),
                         ],
                       ),

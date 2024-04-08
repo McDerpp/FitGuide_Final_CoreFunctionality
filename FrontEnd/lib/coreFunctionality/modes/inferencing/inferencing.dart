@@ -320,7 +320,7 @@
 //           // -----------------checking for movement before executing for collecting data--------------------------------------
 //           if (nowPerforming == false && restState == false) {
 //             if (countDowntoPerform == false) {
-//               _controller.start();
+//               _controller.restart(duration: 10);
 //               countDowntoPerform = true;
 //               dynamicCountDownText = 'Perform';
 //             }

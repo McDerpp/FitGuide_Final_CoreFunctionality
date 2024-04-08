@@ -44,7 +44,7 @@ List<List<double>> padding(List<List<double>> input, int requiredLength) {
 }
 
 Future<bool> inferencingCoordinatesData(
-    Map<String, dynamic> inputs, String modelPath) async {
+    Map<String, dynamic> inputs, String modelPath, int inputNum) async {
   final head = await tfl.Interpreter.fromAsset(modelPath);
   tfl.Tensor inputDetails = head.getInputTensor(0);
   print("PDV  --->$inputDetails");
@@ -57,7 +57,7 @@ Future<bool> inferencingCoordinatesData(
   var output = List.generate(1, (index) => List<double>.filled(1, 0));
 
   List<List<double>> coordinates = inputs['coordinatesData'];
-  coordinates = padding(coordinates, 9);
+  coordinates = padding(coordinates, inputNum);
 
   var testtestset = head.getInputTensors();
 

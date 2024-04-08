@@ -420,42 +420,42 @@ class _collectionDataP3State extends ConsumerState<collectionDataP3> {
                               text2: "Performed",
                               sizeModif: 1,
                               isMain: true),
-                          SizedBox(
-                            width: screenWidth * 0.05,
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment
-                                .start, // Align children at the start
-                            children: [
-                              customText(
-                                screenWidth: screenWidth,
-                                textSizeModif: textSizeModif,
-                                value: ref.watch(maxFrameState),
-                                text1: "Max",
-                                text2: "Frame",
-                                sizeModif: 0.5,
-                                isMain: false,
-                              ),
-                              customText(
-                                screenWidth: screenWidth,
-                                textSizeModif: textSizeModif,
-                                value: ref.watch(minFrameColorState),
-                                text1: "Min",
-                                text2: "Frame",
-                                sizeModif: 0.5,
-                                isMain: false,
-                              ),
-                              customText(
-                                screenWidth: screenWidth,
-                                textSizeModif: textSizeModif,
-                                value: ref.watch(averageFrameState),
-                                text1: "Average",
-                                text2: "Frame",
-                                sizeModif: 0.5,
-                                isMain: false,
-                              ),
-                            ],
-                          ),
+                          // SizedBox(
+                          //   width: screenWidth * 0.05,
+                          // ),
+                          // Column(
+                          //   crossAxisAlignment: CrossAxisAlignment
+                          //       .start, // Align children at the start
+                          //   children: [
+                          //     customText(
+                          //       screenWidth: screenWidth,
+                          //       textSizeModif: textSizeModif,
+                          //       value: ref.watch(maxFrameState),
+                          //       text1: "Max",
+                          //       text2: "Frame",
+                          //       sizeModif: 0.5,
+                          //       isMain: false,
+                          //     ),
+                          //     customText(
+                          //       screenWidth: screenWidth,
+                          //       textSizeModif: textSizeModif,
+                          //       value: ref.watch(minFrameColorState),
+                          //       text1: "Min",
+                          //       text2: "Frame",
+                          //       sizeModif: 0.5,
+                          //       isMain: false,
+                          //     ),
+                          //     customText(
+                          //       screenWidth: screenWidth,
+                          //       textSizeModif: textSizeModif,
+                          //       value: ref.watch(averageFrameState),
+                          //       text1: "Average",
+                          //       text2: "Frame",
+                          //       sizeModif: 0.5,
+                          //       isMain: false,
+                          //     ),
+                          //   ],
+                          // ),
                         ],
                       ),
                     ],

@@ -165,6 +165,7 @@ final StateProvider<String> partsAffectedProvider = StateProvider((ref) => "");
 final StateProvider<int> exerciseNumSetProvider = StateProvider((ref) => 0);
 final StateProvider<int> exerciseNumExecutionProvider =
     StateProvider((ref) => 0);
+final StateProvider<int> inputNumProvider = StateProvider((ref) => 0);
 
 final StateProvider<String> filePathProvider = StateProvider((ref) => "");
 
