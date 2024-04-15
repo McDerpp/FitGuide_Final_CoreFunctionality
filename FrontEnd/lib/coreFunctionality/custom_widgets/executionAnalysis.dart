@@ -2,11 +2,11 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:frontend/coreFunctionality/custom_widgets/customWidgetPDV.dart';
-import 'package:frontend/coreFunctionality/modes/dataCollection/screens/collectionDataP1.dart';
+import 'package:frontend/coreFunctionality/modes/dataCollection/screens/p2_txtConversion.dart';
 import 'package:scroll_snap_list/scroll_snap_list.dart';
-import '../modes/dataCollection/services/provider_collection.dart';
+import '../../services/provider_collection.dart';
 import 'customButton.dart';
-import 'cwProcessingToTxt.dart';
+import 'txtConversion.dart';
 
 import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,11 +20,13 @@ class cwDataAnalysis extends ConsumerStatefulWidget {
   final int alphaValue;
   final int execCount;
   final List<List<List<double>>> data;
+  final List<List<List<double>>> data2;
 
   const cwDataAnalysis({
     super.key,
     required this.execCount,
     required this.data,
+    required this.data2,
     this.widthMultiplier = 0.7,
     this.heightMultiplier = 0.25,
     this.alphaValue = 235,
@@ -163,16 +165,24 @@ class _cwDataAnalysisState extends ConsumerState<cwDataAnalysis> {
                                             child: HalfCircleProgressBar(
                                               backgroundColor:
                                                   colorSet['tertiaryColor']!,
-                                              valueColor:
-                                                  colorSet['secondaryColor']!,
+
                                               strokeWidth: screenWidth * 0.06,
-                                              executionCount: widget.execCount,
+                                              executionCount: ref
+                                                  .watch(
+                                                      coordinatesDataProvider)
+                                                  .state
+                                                  .length,
 
                                               maxExecution: 100, // 50% progress
                                               // 50% progress
                                               sizeOfCircle: Size(
                                                   screenWidth * 0.5,
                                                   screenWidth * 0.5),
+                                              incorrectExecutionCount: ref
+                                                  .watch(
+                                                      incorrectCoordinatesDataProvider)
+                                                  .state
+                                                  .length,
                                             ),
                                           ),
                                           Center(
@@ -336,7 +346,11 @@ class _cwDataAnalysisState extends ConsumerState<cwDataAnalysis> {
                                                   MaterialPageRoute(
                                                     builder: (context) =>
                                                         collectionDataP1(
-                                                            input: widget.data),
+                                                      correctDataset:
+                                                          widget.data,
+                                                      incorretcDataset:
+                                                          widget.data2,
+                                                    ),
                                                   ),
                                                 );
                                               },

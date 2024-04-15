@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/coreFunctionality/custom_widgets/customWidgetPDV.dart';
 import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
 
-import '../modes/dataCollection/services/provider_collection.dart';
+import '../../services/provider_collection.dart';
 import 'customButton.dart';
 
 class cwIgnorePose extends ConsumerStatefulWidget {

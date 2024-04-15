@@ -21,8 +21,6 @@ class PosePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    print("executionState ---> $executionState");
-
     Color currentColorState = Colors.white;
 
     if (executionState == 0) {
@@ -30,7 +28,7 @@ class PosePainter extends CustomPainter {
     } else if (executionState == 1) {
       currentColorState = Colors.red;
     } else if (executionState == 2) {
-       currentColorState = Colors.blue;
+      currentColorState = Colors.blue;
     }
 
     final paint = Paint()

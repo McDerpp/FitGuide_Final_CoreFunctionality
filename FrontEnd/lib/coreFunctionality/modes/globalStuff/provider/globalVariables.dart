@@ -167,7 +167,12 @@ final StateProvider<int> exerciseNumExecutionProvider =
     StateProvider((ref) => 0);
 final StateProvider<int> inputNumProvider = StateProvider((ref) => 0);
 
-final StateProvider<String> filePathProvider = StateProvider((ref) => "");
+
+
+
+final StateProvider<String> correctDataSetPath = StateProvider((ref) => "");
+final StateProvider<String> incorrectDataSetPath = StateProvider((ref) => "");
+
 
 
 

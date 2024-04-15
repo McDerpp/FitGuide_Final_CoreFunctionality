@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/coreFunctionality/modes/dataCollection/screens/collectionDataP2.dart';
-import 'package:frontend/coreFunctionality/modes/dataCollection/screens/collectionDataP3.dart';
-import 'package:frontend/coreFunctionality/modes/dataCollection/screens/collectionDataP4.dart';
-// import 'package:frontend/coreFunctionality/modes/dataCollection/screens/collectionData(cleaning).dart';
+import 'package:frontend/coreFunctionality/custom_widgets/videoPreview.dart';
+import 'package:frontend/coreFunctionality/modes/dataCollection/screens/p3_videoRecord.dart';
+import 'package:frontend/coreFunctionality/modes/dataCollection/screens/p4_exerciseDetail.dart';
+import 'package:frontend/coreFunctionality/modes/dataCollection/screens/p5_modelTraining.dart';
+import 'package:frontend/coreFunctionality/modes/dataCollection/screens/base_datasetCollection.dart';
 
 import 'package:frontend/coreFunctionality/modes/inferencing/inferencing(seamless).dart';
-import 'coreFunctionality/modes/dataCollection/screens/collectionData.dart';
+// import 'coreFunctionality/modes/dataCollection/screens/collectionData.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'coreFunctionality/modes/dataCollection/screens/collectionDataP1.dart';
+import 'coreFunctionality/modes/dataCollection/screens/p2_txtConversion.dart';
 import 'coreFunctionality/modes/inferencing/inferencing.dart';
 import 'coreFunctionality/modes/inferencing/inferencingP1.dart';
 import 'providers.dart';
@@ -52,14 +53,14 @@ class Home extends StatelessWidget {
       'setsNeeded': 2,
       'numberOfExecution': 2,
       'modelPath': 'assets/models/wholeModel/obliqueTwistV3.tflite',
-      'videoPath': 'FrontEnd/assets/videos/jumpNjacksVid.mp4',
+      'videoPath': 'assets/videos/jumpNjacksVid.mp4',
       // still need to implement extraction of ignored coordinates when collecting data!
       'ignoredCoordinates': ["left_arm", "left_leg"],
       'inputNum': 8,
     };
 
     Map<String, dynamic> exerciseDetail2 = {
-      'nameOfExercise': "Jump and Jacks",
+      'nameOfExercise': "Jumping Jacks",
       'restDuration': 15,
       'setsNeeded': 2,
       'numberOfExecution': 2,
@@ -71,8 +72,8 @@ class Home extends StatelessWidget {
     };
 
     List<Map<String, dynamic>> exerciseProgram1 = [];
-    exerciseProgram1.add(exerciseDetail1);
     exerciseProgram1.add(exerciseDetail2);
+    exerciseProgram1.add(exerciseDetail1);
 
     return Scaffold(
         body: Table(
@@ -95,9 +96,7 @@ class Home extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => collectionData(),
-                    ),
+                    MaterialPageRoute(builder: (context) => collectionData()),
                   );
                 },
                 child: const Text("Collect Data "))

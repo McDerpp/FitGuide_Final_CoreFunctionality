@@ -9,7 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/coreFunctionality/custom_widgets/videoPreview.dart';
-import 'package:frontend/coreFunctionality/modes/dataCollection/services/provider_collection.dart';
+import 'package:frontend/services/provider_collection.dart';
 import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
@@ -79,6 +79,10 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
   List<Map<String, dynamic>> queueMovementData = [];
   List<Map<String, dynamic>> queueInferencingData = [];
   int noMovementCtr = 0;
+
+  bool showPreview = false;
+  int showPreviewCtr = 0;
+  bool showPreviewPass = false;
 
   // List<Map<String, dynamic>> itemsContainer = [];
 
@@ -236,7 +240,6 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
     try {
       if (restState == true && restingInitialized == false) {
         restingInitialized = true;
-        CountDownController _controller = CountDownController();
         _controller.restart(duration: 10);
         print("initializingRest ----? $restingInitialized");
 
@@ -257,7 +260,7 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
         queueMovementData.removeAt(0);
 
 // if rest state is true but it has not started yet then initialize or start it--------------------------------------------------------------------------
-        nowPerforming = true;
+        // nowPerforming = true;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxXXXXXXXXXXXXXXXXXXXXXXXXXXX
         if (value == true) {
 // this is checking for at the start of the exercise if movement is detected or not
 // if detected then it will start countdown otherwise it will restart
@@ -272,6 +275,7 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
           if (_controller.getTime().toString() == "10" &&
               nowPerforming == false &&
               restState == true) {
+            print("ENTERING REST STATE");
             nowPerforming = true;
             restState = false;
             restingInitialized = false;
@@ -374,19 +378,35 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
         } else {
           inferenceBuffer.add(value);
         }
-// checking if consecutive inferencing is returing true
-// this is due to the model having diverse inferencing capability(even if one sequence is missing from being removed it can still determine the inference as true, this can be fixed in the mode directly by supplying training with more data which is unrealistic)
 
         if (value == true) {
-          if (inferenceBuffer.elementAt(0) == false &&
-              inferenceBuffer.elementAt(1) == true &&
-              nowPerforming == true) {
-            inferenceCorrectCtr++;
+          if (showPreview == false) {
+            if (inferenceBuffer.elementAt(0) == false &&
+                inferenceBuffer.elementAt(1) == true &&
+                nowPerforming == true) {
+              inferenceCorrectCtr++;
+              showPreviewCtr = 0;
+            }
           }
-
+          if (showPreview == true) {
+            setState(() {
+              showPreview = false;
+              showPreviewPass = true;
+            });
+            showPreviewCtr = 0;
+          }
           dynamicCountDownColor = Color.fromARGB(255, 3, 104, 8);
         } else {
           dynamicCountDownColor = Color.fromARGB(255, 255, 0, 0);
+          if (showPreview == false) {
+            showPreviewCtr++;
+          }
+
+          if (showPreviewCtr >= 50) {
+            setState(() {
+              showPreview = true;
+            });
+          }
         }
         if (queueInferencingData.isNotEmpty) {
           queueInferencingData.removeAt(0);
@@ -669,18 +689,8 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
               ),
             ),
           ),
-          Padding(
-            padding: EdgeInsets.all(8.0), // Adjust the value as needed
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                VideoPreviewScreen(
-                  videoPath: video,
-                  isInferencingPreview: true,
-                ),
-              ],
-            ),
-          ),
+
+
 
 // -----------------------------------------------------------------------------------------------------------[Current Exercise Description]
           Align(
@@ -784,45 +794,6 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
             ),
           ),
 
-          // Align(
-          //   alignment: Alignment.topCenter,
-          //   child: Row(
-          //     mainAxisAlignment: MainAxisAlignment.center,
-          //     children: [
-          //       Align(
-          //         alignment: FractionalOffset(0.5, 0.075),
-          //         child: Container(
-          //           height: screenHeight * 0.03,
-          //           width: screenWidth * 0.38,
-          //           decoration: BoxDecoration(
-          //             borderRadius: BorderRadius.only(
-          //               topLeft: Radius.circular(100.0),
-          //               bottomLeft: Radius.circular(100.0),
-          //               topRight: Radius.circular(100.0),
-          //               bottomRight: Radius.circular(100.0),
-          //             ),
-          //             color: tertiaryColor
-          //                 .withOpacity(0.6), // Adjust alpha as needed
-          //           ),
-          //           child: Row(
-          //             mainAxisAlignment: MainAxisAlignment.center,
-          //             children: [
-          //               Text(
-          //                 textAlign: TextAlign.end,
-          //                 "${setsAchieved.toString()} sets of ${widget.setsNeeded}",
-          //                 style: TextStyle(
-          //                   fontSize: 20.0 * textSizeModif,
-          //                   fontWeight: FontWeight.w200,
-          //                   color: secondaryColor,
-          //                 ),
-          //               ),
-          //             ],
-          //           ),
-          //         ),
-          //       ),
-          //     ],
-          //   ),
-          // ),
 // -----------------------------------------------------------------------------------------------------------[Progress Container]
 
           Align(
@@ -864,71 +835,21 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
             ),
           ),
 
-// -----------------------------------------------------------------------------------------------------------[Execution Progress Bar]
-          // Align(
-          //   alignment: Alignment(0.0, -0.92),
-          //   child: Container(
-          //     width: screenWidth * 0.80,
-          //     height: screenHeight * 0.017,
-          //     decoration: BoxDecoration(
-          //       color: tertiaryColor,
-          //       borderRadius: BorderRadius.circular(screenWidth * 0.07),
-          //     ),
-          //     child: ClipRRect(
-          //       borderRadius: BorderRadius.circular(screenWidth * 0.07),
-          //       child: LinearProgressIndicator(
-          //         value: inferenceCorrectCtr / widget.numberOfExecution,
-          //         backgroundColor: tertiaryColor.withOpacity(0.5),
-          //         valueColor: AlwaysStoppedAnimation<Color>(
-          //             secondaryColor.withOpacity(0.5)),
-          //       ),
-          //     ),
-          //   ),
-          // ),
-
-// -----------------------------------------------------------------------------------------------------------[Sets Progress Bar]
-          // Align(
-          //   alignment: Alignment(0.0, -0.87),
-          //   child: buildContainerList(widget.setsNeeded, setsAchieved, context,
-          //       spaceModifier: 0.8),
-          // ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // SizedBox(
-                //   width: screenWidth * 0.0325,
-                // ),
-
-                // ElevatedButton(
-                //   child: Text(
-                //     'Tutorial',
-                //     style: TextStyle(
-                //       fontWeight: FontWeight.w300,
-                //       color: mainColor,
-                //       fontSize: 16.0,
-                //     ),
-                //   ),
-                //   style: ButtonStyle(
-                //     backgroundColor:
-                //         MaterialStateProperty.all<Color>(tertiaryColor),
-                //     minimumSize: MaterialStateProperty.all(
-                //         Size(screenWidth * 0.25, screenHeight * 0.04)),
-                //     shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                //       RoundedRectangleBorder(
-                //         borderRadius: BorderRadius.circular(screenWidth * 0.08),
-                //       ),
-                //     ),
-                //   ),
-                //   onPressed: () {
-                //     // Handle button press
-                //     print('ElevatedButton pressed');
-                //   },
-                // ),
-              ],
-            ),
-          ),
+          showPreview == true
+              ? Stack(
+                  children: [
+                    Container(
+                      height: screenHeight,
+                      width: screenWidth,
+                      color: Colors.black87.withOpacity(0.85),
+                    ),
+                    VideoPreviewScreen(
+                      videoPath: video,
+                      isInferencingPreview: true,
+                    )
+                  ],
+                )
+              : noDisplay(),
         ],
       ),
     );

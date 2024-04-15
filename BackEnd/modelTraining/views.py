@@ -23,7 +23,7 @@ def collect_dataset_info(request):
 
         # need to check if id exist
         randId = rand.randint(0, 999999999)
-        # url = data.get('datasetUrl')
+        url = data.get('datasetUrl')
         luminance = data.get('avgLuminance')
         numExecution = data.get('numExecution')
         avgSequence = data.get('avgSequence')
@@ -33,7 +33,7 @@ def collect_dataset_info(request):
         # what if data is still not available?!?!?!
         file_path = request.session.get('upload_file_path')
         print("upload_file_path --> ", file_path)
-        # trainModel(file_path)
+        trainModel(file_path)
 
         dataset_info = DatasetInfo(
             datasetID=randId,
@@ -94,22 +94,18 @@ def datasetSubmit(request):
         session_key = request.META.get('HTTP_AUTHORIZATION')
         session_store = SessionStore(session_key=session_key)
 
-        uploaded_file = request.FILES['file']
-
-        uploaded_file = request.FILES['file']
+        uploaded_file = request.FILES['positiveDataset']
+        uploaded_file2 = request.FILES['negativeDataset']
 
         current_datetime = datetime.now()
-
-        # year = str(current_datetime.year)
-        # month = str(current_datetime.month)
-        # day = str(current_datetime.day)
 
         randId_dataset = rand.randint(0, 999999999)
         formatted_number = '{:07d}'.format(randId_dataset)
         final_rand_id = str(formatted_number)
 
-        # randId_filename = 'coordinates_' +  final_rand_id + '_' + month + day + year + '.txt'
-        randId_filename = 'coordinates_' + final_rand_id + '.txt'
+        # randId_filename_correct = 'coordinates_' +  final_rand_id + '_' + month + day + year + '.txt'
+        randId_filename_postive = 'coordinates_positive_' + final_rand_id + '.txt'
+        randId_filename_negative = 'coordinates_negative_' + final_rand_id + '.txt'
 
         destination_folder = os.path.join(
             'D:/CLARK/Documents/fitguidef/BackEnd/modelTraining/', 'txtFile')
@@ -117,13 +113,40 @@ def datasetSubmit(request):
         os.makedirs(destination_folder, exist_ok=True)
 
         # file_name = uploaded_file.name
+# ===============================================================================
 
-        file_path = os.path.join(destination_folder + '/', randId_filename)
+        file_path = os.path.join(
+            destination_folder + '/', randId_filename_postive)
 
         with open(file_path, 'wb') as destination_file:
             for chunk in uploaded_file.chunks():
                 destination_file.write(chunk)
+
+        file_path = os.path.join(
+            destination_folder + '/', randId_filename_postive)
+
+        with open(file_path, 'wb') as destination_file:
+            for chunk in uploaded_file.chunks():
+                destination_file.write(chunk)
+
+# ===============================================================================
+        file_path2 = os.path.join(
+            destination_folder + '/', randId_filename_postive)
+
+        with open(file_path2, 'wb') as destination_file:
+            for chunk in uploaded_file2.chunks():
+                destination_file.write(chunk)
+
+        file_path2 = os.path.join(
+            destination_folder + '/', randId_filename_postive)
+
+        with open(file_path2, 'wb') as destination_file:
+            for chunk in uploaded_file2.chunks():
+                destination_file.write(chunk)
+# ===============================================================================
+
         request.session.save()
+
 
 # DatasetInfo===========================================================
         avg_luminance = request.POST.get('avgLuminance')
@@ -135,15 +158,15 @@ def datasetSubmit(request):
 
         dataset_info = DatasetInfo(
             datasetID=randId_dataset,
-            datasetUrl=file_path,
-            avgLuminance=avg_luminance,
+            positiveDatasetUrl=file_path,
+            negativeDatasetUrl=file_path2,
             numExecution=num_execution,
             avgSequence=avg_sequence,
             minSequence=min_sequence,
             maxSequence=max_sequence
         )
 
-# ExerciseInfo===========================================================          
+# ExerciseInfo===========================================================
         exercise_ID = rand.randint(0, 999999999)
         exercise_Name = request.POST.get('exerciseName')
         parts_Affected = request.POST.get('partsAffected')
@@ -156,21 +179,21 @@ def datasetSubmit(request):
 
         # model_info_instance = session_store['setModelInfo']
 
-        print("model_info_instance --> ",model_info_instance)
+        print("model_info_instance --> ", model_info_instance)
 
         exerciseInfo = ExerciseInfo(
             exerciseID=exercise_ID,
             exerciseName=exercise_Name,
-            partAffected=parts_Affected,
-            description=description,
-            additionalNotes=additional_notes,
+            # partAffected=parts_Affected,
+            # description=description,
+            # additionalNotes=additional_notes,
             numExecution=num_execution,
             numSet=num_set,
-            modelID = model_info_instance
+            modelID=model_info_instance
         )
 
         exerciseInfo.save()
-        dataset_info.save()
+        # dataset_info.save()
 
         return JsonResponse({'message': 'File uploaded successfully'}, status=200)
     else:

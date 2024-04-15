@@ -10,7 +10,7 @@ import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
 
-import '../../modes/dataCollection/services/provider_collection.dart';
+import '../../../services/provider_collection.dart';
 
 class CameraView extends ConsumerStatefulWidget {
   CameraView(
@@ -239,7 +239,7 @@ class _CameraViewState extends ConsumerState<CameraView> {
       alignment: Alignment.topCenter,
       child: CameraPreview(
         _controller!,
-        child: widget.customPaint ?? Text("erewrwr"),
+        child: widget.customPaint ?? Text(""),
       ),
     );
 
@@ -409,25 +409,15 @@ class _CameraViewState extends ConsumerState<CameraView> {
     final CameraController? cameraController = _controller;
 
     int recordings = ref.watch(recording);
-    print("recordingState ---> $recordings ");
 
     if (cameraController!.value.isInitialized == true) {
-      print("cameraController!.value.isInitialized1234456456546");
-    } else {
-      print("cameraController!.value.isInitialized12346456546456---not");
-    }
+    } else {}
 
     if (!cameraController.value.isRecordingVideo == true) {
-      print("testing0912323423");
-    } else {
-      print("testing0912323423---not");
-    }
+    } else {}
 
     if (cameraController! != null) {
-      print("cameraControllerg0912323423");
-    } else {
-      print("testing0912323423---not");
-    }
+    } else {}
 
     if (recordings == 1) {
       ref.read(recording.notifier).state = 2;
@@ -436,29 +426,21 @@ class _CameraViewState extends ConsumerState<CameraView> {
               !cameraController.value.isRecordingVideo
           ? onVideoRecordButtonPressed()
           : null;
-      print("recording---------------2222222222");
     }
 
     if (recordings == 3) {
       ref.read(recording.notifier).state = 0;
       if (cameraController!.value.isRecordingVideo == true) {
-        print("isRecording1234");
-      } else {
-        print("notRecording1234");
-      }
+      } else {}
 
       if (cameraController.value.isInitialized == true) {
-        print("isInitialized1234");
-      } else {
-        print("notInitialized1234");
-      }
+      } else {}
 
       // cameraController != null &&
       cameraController.value.isInitialized &&
               cameraController.value.isRecordingVideo
           ? onStopButtonPressed()
           : null;
-      print("stop recording---------------------------------111111");
     }
 
     final inputImage = _inputImageFromCameraImage(image);
