@@ -48,15 +48,24 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Map<String, dynamic> exerciseDetail1 = {
-      'nameOfExercise': "Oblique Twist",
+      // 'nameOfExercise': "Oblique Twist",
+      // 'restDuration': 15,
+      // 'setsNeeded': 2,
+      // 'numberOfExecution': 2,
+      // 'modelPath': 'assets/models/wholeModel/obliqueTwistV3.tflite',
+      // 'videoPath': 'assets/videos/jumpNjacksVid.mp4',
+      // // still need to implement extraction of ignored coordinates when collecting data!
+      // 'ignoredCoordinates': ["left_arm", "left_leg"],
+      // 'inputNum': 8,
+      'nameOfExercise': "Jumping Jacks",
       'restDuration': 15,
       'setsNeeded': 2,
       'numberOfExecution': 2,
-      'modelPath': 'assets/models/wholeModel/obliqueTwistV3.tflite',
+      'modelPath':
+          'assets/models/wholeModel/converted_model_whole_model4782(loss_0.005)(acc_0.999).tflite',
       'videoPath': 'assets/videos/jumpNjacksVid.mp4',
-      // still need to implement extraction of ignored coordinates when collecting data!
       'ignoredCoordinates': ["left_arm", "left_leg"],
-      'inputNum': 8,
+      'inputNum': 9,
     };
 
     Map<String, dynamic> exerciseDetail2 = {

@@ -234,14 +234,18 @@ class _CameraViewState extends ConsumerState<CameraView> {
 
     return Transform.scale(
       // scale: scale * 0.85,
-      scaleX: scale * 0.80,
-      scaleY: scale * 0.65,
-      alignment: Alignment.topCenter,
+      scaleX: scale * 0.95,
+      scaleY: scale * 0.80,
+      // scaleY: scale * 0.65,
+      // alignment: Alignment.topCenter
+      alignment: Alignment.center,
+      // ,
       child: CameraPreview(
         _controller!,
         child: widget.customPaint ?? Text(""),
       ),
     );
+    
 
     // return Container(
     //   color: Colors.black,

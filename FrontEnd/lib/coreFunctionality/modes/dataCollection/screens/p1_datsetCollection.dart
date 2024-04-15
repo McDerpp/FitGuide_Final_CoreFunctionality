@@ -252,8 +252,8 @@ class _collectionDataTrainingState
                 buildElevatedButton(
                     context: context,
                     label: ref.watch(isCollectingCorrect.notifier).state == true
-                        ? "Correct Data"
-                        : "Incorrect Data",
+                        ? "Correct"
+                        : "Incorrect",
                     colorSet: colorSet,
                     textSizeModifierIndividual:
                         textSizeModifierSet['smallText2']!,

@@ -57,6 +57,7 @@ class _DetectorViewState extends State<DetectorView> {
           )
         : Placeholder();
   }
+
   void _onDetectorViewModeChanged() {
     if (_mode == DetectorViewMode.liveFeed) {
       _mode = DetectorViewMode.gallery;

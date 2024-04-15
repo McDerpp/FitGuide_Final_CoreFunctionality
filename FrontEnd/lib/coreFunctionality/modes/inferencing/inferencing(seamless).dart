@@ -42,13 +42,13 @@ class inferencingSeamless extends ConsumerStatefulWidget {
 class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  late String nameOfExercise;
-  late String model;
-  late String video;
-  late List<String> ignoredCoordinates;
-  late int numberOfExecution;
-  late int setsNeeded;
-  late int restDuration;
+  String nameOfExercise = "";
+  String model = "";
+  String video = "";
+  List<String> ignoredCoordinates = [];
+  int numberOfExecution = 0;
+  int setsNeeded = 0;
+  int restDuration = 0;
 
   // ---------------------inferencing mode variables----------------------------------------------------------
   // isolate initialization for heavy process
@@ -80,7 +80,6 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
   List<Map<String, dynamic>> queueInferencingData = [];
   int noMovementCtr = 0;
 
-  bool showPreview = false;
   int showPreviewCtr = 0;
   bool showPreviewPass = false;
 
@@ -320,6 +319,7 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
 
 // if all the sets have been performed
       if (setsAchieved == setsNeeded) {
+        ref.watch(showPreviewProvider.notifier).state = true;
         setState(() {
           if (exerciseListCtr <= maxExerciseList) {
             exerciseListCtr++;
@@ -380,7 +380,7 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
         }
 
         if (value == true) {
-          if (showPreview == false) {
+          if (ref.watch(showPreviewProvider) == false) {
             if (inferenceBuffer.elementAt(0) == false &&
                 inferenceBuffer.elementAt(1) == true &&
                 nowPerforming == true) {
@@ -388,9 +388,9 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
               showPreviewCtr = 0;
             }
           }
-          if (showPreview == true) {
+          if (ref.watch(showPreviewProvider) == true) {
             setState(() {
-              showPreview = false;
+              ref.watch(showPreviewProvider.notifier).state = false;
               showPreviewPass = true;
             });
             showPreviewCtr = 0;
@@ -398,13 +398,13 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
           dynamicCountDownColor = Color.fromARGB(255, 3, 104, 8);
         } else {
           dynamicCountDownColor = Color.fromARGB(255, 255, 0, 0);
-          if (showPreview == false) {
+          if (ref.watch(showPreviewProvider) == false) {
             showPreviewCtr++;
           }
 
           if (showPreviewCtr >= 50) {
             setState(() {
-              showPreview = true;
+              ref.watch(showPreviewProvider.notifier).state = true;
             });
           }
         }
@@ -461,7 +461,7 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
     return Icon(
       Icons.accessibility_new_sharp,
       color: secondaryColor.withOpacity(opacity),
-      size: screenWidth * 0.08,
+      size: screenWidth * 0.07,
     );
   }
 
@@ -471,7 +471,7 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
     return Icon(
       Icons.lightbulb_circle,
       color: secondaryColor.withOpacity(opacity),
-      size: screenWidth * 0.08,
+      size: screenWidth * 0.07,
     );
   }
 
@@ -604,6 +604,7 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
     // exercise details------------------------------------------------------------
     maxExerciseList = widget.exerciseList.length;
     buffer = ref.watch(bufferProvider);
+
     try {
       if (exerciseListCtr <= maxExerciseList) {
         ref.read(inputNumProvider.notifier).state =
@@ -663,18 +664,17 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
     return Scaffold(
       body: Stack(
         children: [
-          // Align(
-          //   alignment: Alignment.topCenter,
-          //   child: Container(
-          //     color: Colors.amber,
-          //     width: screenWidth,
-          //     height: screenHeight * 1.5,
-          //   ),
-          // ),
+          Align(
+            alignment: Alignment.topCenter,
+            child: Container(
+              color: Colors.amber,
+              width: screenWidth,
+              height: screenHeight * 1.5,
+            ),
+          ),
 
           Align(
             alignment: Alignment.topCenter,
-            // Set top to 0 to cover the entire screen from the top
             child: Container(
               width: screenWidth, // Set a specific width
               height: screenHeight, // Set a specific height or use constraints
@@ -690,69 +690,120 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
             ),
           ),
 
-
-
 // -----------------------------------------------------------------------------------------------------------[Current Exercise Description]
-          Align(
-            alignment: Alignment.bottomCenter,
+
+          displayCountdownTimer,
+
+          // Positioned(
+          //   bottom: screenHeight * .025,
+          //   left: screenWidth * .07,
+          //   child:
+          // ),
+          Positioned(
+            bottom: screenHeight * 0.15,
             child: Container(
-              height: screenHeight * 0.11,
-              width: screenHeight,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(screenHeight * .02),
-                  topRight: Radius.circular(screenHeight * .02),
-                ),
-                color: mainColor,
-              ),
-              child: Row(
+              width: screenWidth,
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                // crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Column(
-                    // mainAxisAlignment: MainAxisAlignment.start,
+                  buildContainerList(
+                      widget.exerciseList.length, exerciseListCtr, context,
+                      spaceModifier: 0.8),
+                ],
+              ),
+            ),
+          ),
+
+          Align(
+            alignment: Alignment(0, .98),
+            child: Container(
+              width: screenWidth * 0.95,
+              height: screenHeight * 0.13,
+              decoration: BoxDecoration(
+                color: secondaryColor,
+                borderRadius: BorderRadius.circular(screenWidth * 0.05),
+              ),
+              child: Stack(children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                  child: LinearProgressIndicator(
+                    minHeight: screenHeight * 0.5,
+                    value: inferenceCorrectCtr / numberOfExecution,
+                    backgroundColor: mainColor.withOpacity(0.9),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                        secondaryColor.withOpacity(0.5)),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(10.0), // Adjust the padding as needed
+                  child: Column(
                     children: [
-                      SizedBox(
-                        height: screenHeight * 0.0115,
-                      ),
-                      buildContainerList(
-                          widget.exerciseList.length, exerciseListCtr, context,
-                          spaceModifier: 0.8),
-                      SizedBox(
-                        height: screenHeight * 0.0001,
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                      Row(
                         children: [
-                          SizedBox(
-                            height: screenHeight * 0.0001,
-                          ),
                           Text(
                             "${nameOfExercise}",
+                            textAlign: TextAlign.start,
+                            style: TextStyle(
+                              fontSize: 28.0 * textSizeModif,
+                              fontWeight: FontWeight.w800,
+                              color: tertiaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            "Reps:",
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 30.0 * textSizeModif,
-                              fontWeight: FontWeight.w400,
-                              color: secondaryColor,
+                              fontSize: 19.0 * textSizeModif,
+                              fontWeight: FontWeight.w300,
+                              color: tertiaryColor,
+                            ),
+                          ),
+                          Text(
+                            "  ${inferenceCorrectCtr} / ${numberOfExecution}",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 19.0 * textSizeModif,
+                              fontWeight: FontWeight.w300,
+                              color: tertiaryColor,
+                            ),
+                          ),
+                          SizedBox(
+                            width: screenWidth * 0.1,
+                          ),
+                          Text(
+                            "Sets:",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 19.0 * textSizeModif,
+                              fontWeight: FontWeight.w300,
+                              color: tertiaryColor,
+                            ),
+                          ),
+                          Text(
+                            "  ${setsAchieved} / ${setsNeeded}",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 19.0 * textSizeModif,
+                              fontWeight: FontWeight.w300,
+                              color: tertiaryColor,
                             ),
                           ),
                         ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ]),
             ),
           ),
 
-          displayCountdownTimer,
-          // Positioned(
-          //   bottom: screenHeight * .025,
-          //   left: screenWidth * .07,
-          //   child:
-          // ),
-
           Align(
-            alignment: Alignment(-1.0, 0.78),
+            alignment: Alignment(-1.0, 0.7),
             child: IconButton(
               icon: Icon(
                 Icons.arrow_back,
@@ -764,7 +815,7 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
             ),
           ),
           Align(
-            alignment: Alignment(1.0, 0.78),
+            alignment: Alignment(1.0, 0.7),
             child: IconButton(
               icon: Icon(
                 Icons.question_mark,
@@ -778,16 +829,13 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
 
 // -----------------------------------------------------------------------------------------------------------[Error Indicator Pose]
           Positioned(
-            top: screenWidth * 0.16,
+            top: screenWidth * 0.1,
             child: Container(
               width: screenWidth,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   displayError2,
-                  SizedBox(
-                    height: screenHeight * 0.05,
-                  ),
                   displayError1,
                 ],
               ),
@@ -796,46 +844,46 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
 
 // -----------------------------------------------------------------------------------------------------------[Progress Container]
 
-          Align(
-            alignment: Alignment(0.0, -0.94),
-            child: Container(
-              width: screenWidth * 0.83,
-              height: screenHeight * 0.05,
-              decoration: BoxDecoration(
-                color: mainColor.withOpacity(0.75),
-                borderRadius: BorderRadius.circular(screenWidth * 0.03),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: screenWidth * 0.80,
-                    height: screenHeight * 0.017,
-                    decoration: BoxDecoration(
-                      color: tertiaryColor,
-                      borderRadius: BorderRadius.circular(screenWidth * 0.07),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(screenWidth * 0.07),
-                      child: LinearProgressIndicator(
-                        value: inferenceCorrectCtr / numberOfExecution,
-                        backgroundColor: tertiaryColor.withOpacity(0.5),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                            secondaryColor.withOpacity(0.5)),
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: screenHeight * 0.005,
-                  ),
-                  buildContainerList(setsNeeded, setsAchieved, context,
-                      spaceModifier: .8),
-                ],
-              ),
-            ),
-          ),
+          // Align(
+          //   alignment: Alignment(0.0, -0.94),
+          //   child: Container(
+          //     width: screenWidth * 0.83,
+          //     height: screenHeight * 0.05,
+          //     decoration: BoxDecoration(
+          //       color: mainColor.withOpacity(0.75),
+          //       borderRadius: BorderRadius.circular(screenWidth * 0.03),
+          //     ),
+          //     child: Column(
+          //       mainAxisAlignment: MainAxisAlignment.center,
+          //       children: [
+          //         Container(
+          //           width: screenWidth * 0.80,
+          //           height: screenHeight * 0.017,
+          //           decoration: BoxDecoration(
+          //             color: tertiaryColor,
+          //             borderRadius: BorderRadius.circular(screenWidth * 0.07),
+          //           ),
+          //           child: ClipRRect(
+          //             borderRadius: BorderRadius.circular(screenWidth * 0.07),
+          //             child: LinearProgressIndicator(
+          //               value: inferenceCorrectCtr / numberOfExecution,
+          //               backgroundColor: tertiaryColor.withOpacity(0.5),
+          //               valueColor: AlwaysStoppedAnimation<Color>(
+          //                   secondaryColor.withOpacity(0.5)),
+          //             ),
+          //           ),
+          //         ),
+          //         SizedBox(
+          //           height: screenHeight * 0.005,
+          //         ),
+          //         buildContainerList(setsNeeded, setsAchieved, context,
+          //             spaceModifier: .8),
+          //       ],
+          //     ),
+          //   ),
+          // ),
 
-          showPreview == true
+          ref.watch(showPreviewProvider) == true
               ? Stack(
                   children: [
                     Container(
@@ -846,6 +894,9 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
                     VideoPreviewScreen(
                       videoPath: video,
                       isInferencingPreview: true,
+                    ),
+                    Container(
+                      child: Text("try this out!"),
                     )
                   ],
                 )

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/coreFunctionality/custom_widgets/errorWidget.dart';
 import 'package:frontend/coreFunctionality/modes/dataCollection/screens/p4_exerciseDetail.dart';
 import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
 import 'package:frontend/services/provider_collection.dart';
@@ -105,9 +106,10 @@ class _VideoPreviewScreenState extends ConsumerState<VideoPreviewScreen> {
                                         const collectionDataP3(),
                                   ),
                                 )
-                              : Navigator.pop(context);
+                              : ref.watch(showPreviewProvider.notifier).state =
+                                  false;
                         },
-                      ),
+                      )
                     ],
                   ),
                 ),
