@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/coreFunctionality/custom_widgets/customWidgetPDV.dart';
-import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
+import 'package:frontend/services/globalVariables.dart';
 
 import '../../services/provider_collection.dart';
 import 'customButton.dart';
@@ -16,44 +16,70 @@ class cwIgnorePose extends ConsumerStatefulWidget {
 class _cwIgnorePoseState extends ConsumerState<cwIgnorePose> {
   List<int> ignoreCoordinatesInitialized = [];
 
+// ignoreCoordinatesProvider
   void initiateIgnoreCoordinates() {
-    ignoreCoordinatesInitialized.clear();
     List<int> head = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    List<int> body = [];
-    List<int> leftArm = [11, 13, 25, 21, 17, 19];
+    List<int> body = [12, 11, 24, 23];
+    List<int> leftArm = [11, 13, 21, 17, 19, 15];
     List<int> rightArm = [12, 14, 16, 18, 20, 22];
     List<int> leftLeg = [23, 25, 27, 29, 31];
     List<int> rightLeg = [24, 26, 28, 32, 30];
+    ref.read(ignoreCoordinatesProvider).clear();
 
     if (ref.watch(headBoolState) == true) {
-      ignoreCoordinatesInitialized.addAll(head);
+      for (int coordinate in head) {
+        ref.read(ignoreCoordinatesProvider).add(coordinate);
+      }
       setState(() {});
     }
 
     if (ref.watch(bodyBoolState) == true) {
-      ignoreCoordinatesInitialized.addAll(body);
+      // ignoreCoordinatesInitialized.addAll(body);
+      for (int coordinate in body) {
+        ref.read(ignoreCoordinatesProvider).add(coordinate);
+      }
       setState(() {});
     }
 
     if (ref.watch(leftArmBoolState) == true) {
-      ignoreCoordinatesInitialized.addAll(leftArm);
+      // ignoreCoordinatesInitialized.addAll(leftArm);
+      for (int coordinate in leftArm) {
+        ref.read(ignoreCoordinatesProvider).add(coordinate);
+      }
       setState(() {});
     }
 
     if (ref.watch(rightArmBoolState) == true) {
-      ignoreCoordinatesInitialized.addAll(rightArm);
+      // ignoreCoordinatesInitialized.addAll(rightArm);
+      for (int coordinate in rightArm) {
+        ref.read(ignoreCoordinatesProvider).add(coordinate);
+      }
       setState(() {});
     }
 
     if (ref.watch(leftLegBoolState) == true) {
-      ignoreCoordinatesInitialized.addAll(leftLeg);
+      // ignoreCoordinatesInitialized.addAll(leftLeg);
+      for (int coordinate in leftLeg) {
+        ref.read(ignoreCoordinatesProvider).add(coordinate);
+      }
       setState(() {});
     }
 
     if (ref.watch(rightLegBoolState) == true) {
-      ignoreCoordinatesInitialized.addAll(rightLeg);
+      // ignoreCoordinatesInitialized.addAll(rightLeg);
+      for (int coordinate in rightLeg) {
+        ref.read(ignoreCoordinatesProvider).add(coordinate);
+      }
       setState(() {});
     }
+
+    print("going in head----> ${ref.read(ignoreCoordinatesProvider)}");
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    initiateIgnoreCoordinates();
   }
 
   void dialog(BuildContext context) {
@@ -121,8 +147,8 @@ class _cwIgnorePoseState extends ConsumerState<cwIgnorePose> {
                                                 ref.watch(
                                                     ColorSet)["ColorSet1"]!;
                                           }
-                                          setState(
-                                              () {}); // Update the AlertDialog content
+                                          setState(() {});
+                                          initiateIgnoreCoordinates(); // Update the AlertDialog content
                                         },
                                       ),
                                       buildElevatedButton(
@@ -148,8 +174,8 @@ class _cwIgnorePoseState extends ConsumerState<cwIgnorePose> {
                                                 ref.watch(
                                                     ColorSet)["ColorSet1"]!;
                                           }
-                                          setState(
-                                              () {}); // Update the AlertDialog content
+                                          setState(() {});
+                                          initiateIgnoreCoordinates(); // Update the AlertDialog content
                                         },
                                       ),
                                     ],
@@ -183,8 +209,8 @@ class _cwIgnorePoseState extends ConsumerState<cwIgnorePose> {
                                                 ref.watch(
                                                     ColorSet)["ColorSet1"]!;
                                           }
-                                          setState(
-                                              () {}); // Update the AlertDialog content
+                                          setState(() {});
+                                          initiateIgnoreCoordinates(); // Update the AlertDialog content
                                         },
                                       ),
                                       buildElevatedButton(
@@ -216,8 +242,8 @@ class _cwIgnorePoseState extends ConsumerState<cwIgnorePose> {
                                                 ref.watch(
                                                     ColorSet)["ColorSet1"]!;
                                           }
-                                          setState(
-                                              () {}); // Update the AlertDialog content
+                                          setState(() {});
+                                          initiateIgnoreCoordinates(); // Update the AlertDialog content
                                         },
                                       ),
                                     ],
@@ -251,8 +277,8 @@ class _cwIgnorePoseState extends ConsumerState<cwIgnorePose> {
                                                 ref.watch(
                                                     ColorSet)["ColorSet1"]!;
                                           }
-                                          setState(
-                                              () {}); // Update the AlertDialog content
+                                          setState(() {});
+                                          initiateIgnoreCoordinates(); // Update the AlertDialog content
                                         },
                                       ),
                                       buildElevatedButton(
@@ -284,8 +310,8 @@ class _cwIgnorePoseState extends ConsumerState<cwIgnorePose> {
                                                 ref.watch(
                                                     ColorSet)["ColorSet1"]!;
                                           }
-                                          setState(
-                                              () {}); // Update the AlertDialog content
+                                          setState(() {});
+                                          initiateIgnoreCoordinates(); // Update the AlertDialog content
                                         },
                                       ),
                                     ],

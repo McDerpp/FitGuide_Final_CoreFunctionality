@@ -64,6 +64,29 @@ def txt_pre_process(txt_file,label,simplify=False,simplify_level=14 ):
     return [batch_data,label_array]
 
 
+
+
+def translateCollectedDatatoTxt(dataCollected, filePath):
+    file = open(filePath, 'w')
+    for exerciseSet in dataCollected:
+        file.write('START\n')
+        for sequence in exerciseSet:
+            for individualCoordinate in sequence:
+                if len(str(individualCoordinate)) > 10:
+                    file.write(f'{str(individualCoordinate)[:10]}|')
+                else:
+                    file.write(f'{str(individualCoordinate)}|')
+            file.write('\n')
+        file.write('END\n')
+
+    file.close()
+
+
+
+
+
+
+
 # This function puts a dummy sequences at the end to satisfy the amount of sequences needed for the model or to convert the sequence count uniformly
 # pre_processed_input -> this parameters is for the data input
 # optional_maxLength -> by assigning a value here we can specify the amount of sequence length
@@ -290,7 +313,7 @@ def convert_tf_to_tflite(tf_model,input_shape,test_dataset,name,id_number,valida
     interpreter.reset_all_variables()
 
 
-  folder_path = "D:/CLARK/Documents/fitguidef/BackEnd/modelTraining/trainedModel/tflite/"
+  folder_path = "D:/CLARK/Documents/fitguidef/BackEnd/assets/models/TFLiteModels"
   temp = 'converted_model_'
 
   temp3 = temp + str(name) + id_number + "(loss_"+ str(round(validation_loss,3)) +")" + "(acc_"+  str(round(validation_accuracy,3 )) + ")" + '.tflite'
@@ -810,6 +833,7 @@ def checking_inputs(correct_input,wrong_input,model_path_param,model = ""):
   print("wrong_input --> ",wrong_ctr,"/",len(base_data_noise))
 
   return (correct_ctr / len(base_data)) * 0.5 + (wrong_ctr / len(base_data_noise)) * 0.5
+
 
 
 

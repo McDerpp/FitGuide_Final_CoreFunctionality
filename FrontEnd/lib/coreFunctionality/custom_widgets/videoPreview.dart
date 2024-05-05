@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/coreFunctionality/custom_widgets/errorWidget.dart';
 import 'package:frontend/coreFunctionality/modes/dataCollection/screens/p4_exerciseDetail.dart';
-import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
+import 'package:frontend/services/globalVariables.dart';
 import 'package:frontend/services/provider_collection.dart';
 import 'package:video_player/video_player.dart';
 
@@ -71,10 +71,8 @@ class _VideoPreviewScreenState extends ConsumerState<VideoPreviewScreen> {
 
     return Center(
       child: Container(
-        width:
-            _controller.value.size.width * 0.65, // Adjust the width as needed
-        height:
-            _controller.value.size.height * 0.65, // Adjust the height as needed
+        width: _controller.value.size.width ,
+        height: _controller.value.size.height,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16.0),
           child: AspectRatio(

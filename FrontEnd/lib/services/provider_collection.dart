@@ -7,8 +7,6 @@ final StateProvider<String> sessionKeyProvider = StateProvider((ref) => "");
 
 final StateProvider<int> bufferProvider = StateProvider((ref) => 2);
 
-final StateProvider<int> numExec = StateProvider((ref) => 0);
-
 final StateProvider<String> IP_Adress_used =
     StateProvider((ref) => "192.168.1.18:8000");
 
@@ -29,11 +27,20 @@ final StateProvider<int> minFrameThresholdIdeal = StateProvider((ref) => 10);
 final StateProvider<int> maxFrameThresholdBad = StateProvider((ref) => 5);
 final StateProvider<int> maxFrameThresholdIdeal = StateProvider((ref) => 10);
 
+// Positive dataset quality check
 final StateProvider<double> averageFrameState = StateProvider((ref) => 0.0);
-
 final StateProvider<int> maxFrameState = StateProvider((ref) => 0);
-
 final StateProvider<int> minFrameState = StateProvider((ref) => 0);
+final StateProvider<int> numExec = StateProvider((ref) => 0);
+final StateProvider<int> execTotalFrames = StateProvider((ref) => 0);
+
+// negative dataset quality check
+final StateProvider<double> averageFrameNegativeState =
+    StateProvider((ref) => 0.0);
+final StateProvider<int> maxFrameNegativeState = StateProvider((ref) => 0);
+final StateProvider<int> minFrameNegativeState = StateProvider((ref) => 0);
+final StateProvider<int> numExecNegative = StateProvider((ref) => 0);
+final StateProvider<int> execTotalFramesNegative = StateProvider((ref) => 0);
 
 final StateProvider<List<String>> ignoreCoordinatesInitialized =
     StateProvider((ref) => []);
@@ -135,11 +142,14 @@ class coordinatesData extends StateNotifier<List<List<List<double>>>> {
       state = List.from(state)..removeLast();
     }
   }
+
+  void clearItems() {
+    state = [];
+  }
 }
 
 final StateProvider<incorrectCoordinates> incorrectCoordinatesDataProvider =
     StateProvider((ref) => incorrectCoordinates());
-
 
 class incorrectCoordinates extends StateNotifier<List<List<List<double>>>> {
   incorrectCoordinates() : super([]);
@@ -157,15 +167,27 @@ class incorrectCoordinates extends StateNotifier<List<List<List<double>>>> {
       state = List.from(state)..removeLast();
     }
   }
+
+  void clearItems() {
+    state = [];
+  }
 }
 
 final StateProvider<bool> isPerforming = StateProvider((ref) => false);
+final StateProvider<bool> isRetraining = StateProvider((ref) => false);
+
 
 final StateProvider<bool> isAllCoordinatesPresent =
     StateProvider((ref) => false);
 
-final StateProvider<bool> isCollectingCorrect =
-    StateProvider((ref) => true);
+final StateProvider<bool> isCollectingCorrect = StateProvider((ref) => true);
+
+final StateProvider<String> exerciseID = StateProvider((ref) => "");
+
+
+
+
+
 
 
 

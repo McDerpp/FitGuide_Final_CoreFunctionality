@@ -5,7 +5,6 @@ import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:math' as math;
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 
 List<double> paddingList = [];
@@ -45,7 +44,17 @@ List<List<double>> padding(List<List<double>> input, int requiredLength) {
 
 Future<bool> inferencingCoordinatesData(
     Map<String, dynamic> inputs, String modelPath, int inputNum) async {
-  final head = await tfl.Interpreter.fromAsset(modelPath);
+  final file = File(modelPath.toString());
+
+// CHANGE THIS TO fromAsset if testing
+  final head = await tfl.Interpreter.fromFile(file);
+
+  // try {
+  //   final head = await tfl.Interpreter.fromFile(file);
+  // } catch (error) {
+  //   print("ERROR! ----> not availalbe for fromFile no using fromAsset");
+  //   final head = await tfl.Interpreter.fromAsset(modelPath);
+  // }
   tfl.Tensor inputDetails = head.getInputTensor(0);
   print("PDV  --->$inputDetails");
 

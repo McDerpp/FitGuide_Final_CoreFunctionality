@@ -16,11 +16,10 @@ import 'package:frontend/coreFunctionality/custom_widgets/errorWidget.dart';
 import 'package:frontend/coreFunctionality/logicFunction/movementCheck.dart';
 import 'package:frontend/coreFunctionality/logicFunction/normalizeCoordinates.dart';
 import 'package:frontend/coreFunctionality/modes/dataCollection/screens/p1_datsetCollection.dart';
-import 'package:frontend/coreFunctionality/modes/dataCollection/screens/p6_reviewDataset.dart';
 import 'package:frontend/services/api.dart';
 import 'package:frontend/coreFunctionality/custom_widgets/cwIgnorePose.dart';
 import 'package:frontend/services/provider_collection.dart';
-import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
+import 'package:frontend/services/globalVariables.dart';
 import '../../../custom_widgets/executionAnalysis.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
@@ -33,8 +32,10 @@ import 'package:frontend/coreFunctionality/misc/poseWidgets/detector_view.dart';
 import '../../../mainUISettings.dart';
 
 class collectionData extends ConsumerStatefulWidget {
+  final bool isRetraining;
   const collectionData({
     super.key,
+    this.isRetraining = false,
   });
 
   @override
@@ -118,7 +119,6 @@ class _collectionDataState extends ConsumerState<collectionData> {
     getSessionKey().then((value) {
       ref.watch(sessionKeyProvider.notifier).state = value;
     });
-    // _seconds = 60;
   }
 
   List<List<Pose>> poseQueue = [];
@@ -154,11 +154,10 @@ class _collectionDataState extends ConsumerState<collectionData> {
 // // ==================================[isolate function processImage ]==================================
     try {
       poses = await _poseDetector.processImage(inputImage);
-      print("tempPoseLen ---> ${tempPose.length}");
       Map<String, dynamic> dataNormalizationIsolate = {
         'inputImage': poses.first.landmarks.values,
         'token': rootIsolateTokenNormalization,
-        'coordinatesIgnore': ignoreCoordinatesInitialized,
+        'coordinatesIgnore': ref.read(ignoreCoordinatesProvider),
       };
 
       queueNormalizeData.add(dataNormalizationIsolate);
@@ -233,40 +232,23 @@ class _collectionDataState extends ConsumerState<collectionData> {
                 inferencingList.removeLast();
               }
 
-              ref.read(isCollectingCorrect) == true
-                  ? ref.read(coordinatesDataProvider).addItem(inferencingList)
-                  : ref
-                      .read(incorrectCoordinatesDataProvider)
-                      .addItem(inferencingList);
-
-              execTotalFrames = execTotalFrames + inferencingList.length;
-
-              ref.read(numExec.notifier).state++;
+              if (ref.read(isCollectingCorrect) == true) {
+                ref.read(coordinatesDataProvider).addItem(inferencingList);
+                ref.read(numExec.notifier).state++;
+                execTotalFrames = execTotalFrames + inferencingList.length;
+              } else {
+                ref
+                    .read(incorrectCoordinatesDataProvider)
+                    .addItem(inferencingList);
+                ref.read(numExecNegative.notifier).state++;
+              }
 
               executionCaptured = true;
               print("collected");
 
-              if (minFrame == 0) {
-                minFrame = inferencingList.length;
-                ref.read(minFrameState.notifier).state = minFrame;
-              }
-
-              if (minFrame > inferencingList.length) {
-                minFrame = inferencingList.length;
-                ref.read(minFrameState.notifier).state = minFrame;
-                print("minFrame ---> $minFrame ");
-              }
-
-              if (maxFrame < inferencingList.length) {
-                maxFrame = inferencingList.length;
-                ref.read(maxFrameState.notifier).state = maxFrame;
-                print("maxFrame ---> $maxFrame ");
-              }
-
               inferencingList = [];
             }
           }
-
 
           avgFrames = execTotalFrames / ref.watch(numExec);
           resultAvgFrames = avgFrames.toStringAsFixed(2);
@@ -283,6 +265,8 @@ class _collectionDataState extends ConsumerState<collectionData> {
 
           if (_controller.getTime().toString() == "3" &&
               ref.watch(isPerforming) == false) {
+            inferencingList = [];
+
             ref.watch(isPerforming.notifier).state = true;
           }
         }
@@ -309,12 +293,12 @@ class _collectionDataState extends ConsumerState<collectionData> {
       });
 
       final painter = PosePainter(
-        poses,
-        inputImage.metadata!.size,
-        inputImage.metadata!.rotation,
-        _cameraLensDirection,
-        executionStateResult,
-      );
+          poses,
+          inputImage.metadata!.size,
+          inputImage.metadata!.rotation,
+          _cameraLensDirection,
+          executionStateResult,
+          ref.watch(ignoreCoordinatesProvider));
       _customPaint = CustomPaint(painter: painter);
     } else {
       _text = 'Poses found: ${poses.length}\n\n';
@@ -325,57 +309,6 @@ class _collectionDataState extends ConsumerState<collectionData> {
     if (mounted) {
       setState(() {});
     }
-  }
-
-  void undoExecution(int undoTimes) {
-    int temp = 0;
-    int tempexecTotalFrames = execTotalFrames;
-    for (int ctr = 0; ctr < undoTimes; ctr++) {
-      if (ref.read(coordinatesDataProvider).state.isNotEmpty) {
-        tempexecTotalFrames = (tempexecTotalFrames -
-                ref.read(coordinatesDataProvider).state.last.length)
-            .toInt();
-        ref.read(coordinatesDataProvider).state.removeLast();
-        ref.read(numExec.notifier).state--;
-      }
-    }
-
-    setState(() {
-      ref.watch(isPerforming.notifier).state = false;
-
-      execTotalFrames = tempexecTotalFrames;
-      avgFrames = execTotalFrames / ref.watch(numExec);
-
-      resultAvgFrames = avgFrames.toStringAsFixed(2);
-      avgFrames = double.parse(resultAvgFrames);
-    });
-  }
-
-  void simulateCollectData() {
-    print("simulating collection of data");
-    for (int ctr = 0; ctr <= 5; ctr++) {
-      inferencingList = [];
-      for (int ctr1 = 0; ctr1 <= 10; ctr1++) {
-        temp = [];
-        for (int ctr2 = 0; ctr2 <= 66; ctr2++) {
-          temp.add(0.1111111111);
-        }
-        inferencingList.add(temp);
-      }
-      print("adding --> $numExec");
-      ref.read(coordinatesDataProvider).state.add(inferencingList);
-      setState(() {
-        ref.read(numExec.notifier).state++;
-        ;
-      });
-    }
-    print("translating to txt");
-    Map<String, dynamic> translatingIsolate = {
-      // 'coordinates': coordinatesData,
-      'coordinates': ref.read(coordinatesDataProvider).state,
-
-      'token': rootIsolateTokenTranslating,
-    };
   }
 
   Widget timerCountDown(BuildContext context) {
@@ -428,11 +361,6 @@ class _collectionDataState extends ConsumerState<collectionData> {
         // countdownTimer(context, dynamicCountDownText,
         //     dynamicCountDownColor, _controller)
         );
-  }
-
-  void testrecord(int value) {
-    ref.read(recording.notifier).state = value;
-    print("test record!---> $value");
   }
 
   @override
@@ -494,6 +422,7 @@ class _collectionDataState extends ConsumerState<collectionData> {
                     height:
                         screenHeight, // Set a specific height or use constraints
                     child: DetectorView(
+                      isCollecting: true,
                       title: 'Pose Detector',
                       customPaint: _customPaint,
                       text: _text,
@@ -536,7 +465,9 @@ class _collectionDataState extends ConsumerState<collectionData> {
                   ),
                 ),
 // --------------------------------------------------------------------------[HELP BUTTON]
-                collectionDataTraining(),
+                collectionDataTraining(
+                  isRetraining: widget.isRetraining,
+                ),
 
 //
               ],

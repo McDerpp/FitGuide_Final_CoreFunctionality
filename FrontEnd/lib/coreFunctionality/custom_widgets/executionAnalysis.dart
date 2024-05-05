@@ -8,7 +8,7 @@ import '../../services/provider_collection.dart';
 import 'customButton.dart';
 import 'txtConversion.dart';
 
-import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
+import 'package:frontend/services/globalVariables.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../logicFunction/isolateProcessPDV.dart';
 import '../modes/dataCollection/widgets/cwReview.dart';
@@ -21,6 +21,7 @@ class cwDataAnalysis extends ConsumerStatefulWidget {
   final int execCount;
   final List<List<List<double>>> data;
   final List<List<List<double>>> data2;
+  final bool isRetraining;
 
   const cwDataAnalysis({
     super.key,
@@ -30,6 +31,8 @@ class cwDataAnalysis extends ConsumerStatefulWidget {
     this.widthMultiplier = 0.7,
     this.heightMultiplier = 0.25,
     this.alphaValue = 235,
+    this.isRetraining = false,
+
   });
 
   @override
@@ -55,7 +58,8 @@ class _cwDataAnalysisState extends ConsumerState<cwDataAnalysis> {
     for (int i = 0; i < 30; i++) {
       data.add(Random().nextInt(100) + 1);
     }
-    ref.read(numExec.notifier).state = widget.execCount;
+    // uncomment this after testing
+    // ref.read(numExec.notifier).state = widget.execCount;
   }
 
   @override
@@ -76,18 +80,83 @@ class _cwDataAnalysisState extends ConsumerState<cwDataAnalysis> {
   void showCustomDialogEA(
     BuildContext context, {
     double widthMultiplier = 1.4,
-    double heightMultiplier = 0.5,
+    double heightMultiplier = 0.58,
     int alphaValue = 240,
   }) {
+    ref.watch(isPerforming.notifier).state = false;
+
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
     Color transparentColor = mainColor.withOpacity(alphaValue / 255.0);
     textSizeModifierSet = ref.watch(textSizeModifier);
     textSizeModifierSetIndividual = textSizeModifierSet["smallText"]!;
 
+    int totalFramesPositive = 0;
+    int totalFramesNegative = 0;
+
+    List<List<List<double>>> negativeData =
+        ref.watch(coordinatesDataProvider).state;
+    List<List<List<double>>> positiveData =
+        ref.watch(incorrectCoordinatesDataProvider).state;
+
+    for (List<List<double>> execution in positiveData) {
+      totalFramesPositive = totalFramesPositive + execution.length;
+
+      if (ref.read(maxFrameState.notifier).state < execution.length) {
+        ref.read(maxFrameState.notifier).state = execution.length;
+      }
+
+      if (ref.read(minFrameState.notifier).state == 0) {
+        ref.read(minFrameState.notifier).state = execution.length;
+      }
+
+      if (ref.read(minFrameState.notifier).state > execution.length) {
+        ref.read(minFrameState.notifier).state = execution.length;
+      }
+    }
+
+    for (List<List<double>> execution in negativeData) {
+      totalFramesNegative = totalFramesNegative + execution.length;
+
+      if (ref.read(minFrameNegativeState.notifier).state == 0) {
+        ref.read(minFrameNegativeState.notifier).state = execution.length;
+      }
+
+      if (ref.read(maxFrameNegativeState.notifier).state < execution.length) {
+        ref.read(maxFrameNegativeState.notifier).state = execution.length;
+      }
+
+      if (ref.read(minFrameNegativeState.notifier).state > execution.length) {
+        ref.read(minFrameNegativeState.notifier).state = execution.length;
+      }
+    }
+
+    ref.read(averageFrameState.notifier).state =
+        totalFramesPositive / positiveData.length;
+    ref.read(averageFrameNegativeState.notifier).state =
+        totalFramesNegative / negativeData.length;
+
+    ref.read(numExec.notifier).state = positiveData.length;
+    ref.read(numExecNegative.notifier).state = negativeData.length;
+
     void cancelfunc() {
       Navigator.pop(context);
     }
+
+    List<dynamic> content = [
+      [
+        [Icons.bar_chart, "Average", ref.read(averageFrameState)],
+        [Icons.bar_chart, "Average", ref.read(averageFrameNegativeState)],
+      ],
+      [
+        [Icons.arrow_downward, "Min", ref.read(minFrameState)],
+        [Icons.arrow_downward, "Min", ref.read(minFrameNegativeState)],
+      ],
+      [
+        [Icons.arrow_upward, "Max", ref.read(maxFrameState)],
+        [Icons.arrow_upward, "Max", ref.read(maxFrameNegativeState)],
+      ],
+    ];
 
     showDialog(
       context: context,
@@ -103,45 +172,11 @@ class _cwDataAnalysisState extends ConsumerState<cwDataAnalysis> {
                   children: [
                     Row(
                       children: [
-                        // IconButton(
-                        //   alignment: Alignment.topLeft,
-                        //   padding: EdgeInsets.zero,
-                        //   icon: Icon(
-                        //     Icons.arrow_back,
-                        //     color: tertiaryColor,
-                        //     size: screenWidth * .08,
-                        //   ),
-                        //   highlightColor: Colors.transparent,
-                        //   onPressed: () {
-                        //     if (review == false) {
-                        //       cancelfunc();
-                        //       print("review is false");
-                        //       setState(() {});
-                        //     } else {
-                        //       print("review is true");
-
-                        //       setState(() {
-                        //         review = false;
-                        //       });
-                        //     }
-                        //   },
-                        // ),
                         Expanded(
                           child: SizedBox(
                             height: screenHeight * 0.005,
                           ),
                         ),
-                        // IconButton(
-                        //   alignment: Alignment.topRight,
-                        //   padding: EdgeInsets.zero,
-                        //   icon: Icon(
-                        //     Icons.help,
-                        //     color: tertiaryColor,
-                        //     size: screenWidth * .08,
-                        //   ),
-                        //   highlightColor: Colors.transparent,
-                        //   onPressed: () {},
-                        // ),
                       ],
                     ),
                     Column(
@@ -149,269 +184,149 @@ class _cwDataAnalysisState extends ConsumerState<cwDataAnalysis> {
                         SizedBox(
                           height: screenHeight * 0.02,
                         ),
-                        review == false
-                            ? Column(
-                                children: [
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // SizedBox(
-                                      //   height: screenHeight * 0.005,
-                                      // ),
-                                      Stack(
+                        Column(
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // SizedBox(
+                                //   height: screenHeight * 0.005,
+                                // ),
+                                Stack(
+                                  children: [
+                                    Center(
+                                      child: HalfCircleProgressBar(
+                                        backgroundColor:
+                                            colorSet['tertiaryColor']!,
+
+                                        strokeWidth: screenWidth * 0.06,
+                                        executionCount: ref
+                                            .watch(coordinatesDataProvider)
+                                            .state
+                                            .length,
+
+                                        maxExecution: 100, // 50% progress
+                                        // 50% progress
+                                        sizeOfCircle: Size(screenWidth * 0.5,
+                                            screenWidth * 0.5),
+                                        incorrectExecutionCount: ref
+                                            .watch(
+                                                incorrectCoordinatesDataProvider)
+                                            .state
+                                            .length,
+                                      ),
+                                    ),
+                                    Center(
+                                      child: Column(
                                         children: [
-                                          Center(
-                                            child: HalfCircleProgressBar(
-                                              backgroundColor:
-                                                  colorSet['tertiaryColor']!,
-
-                                              strokeWidth: screenWidth * 0.06,
-                                              executionCount: ref
-                                                  .watch(
-                                                      coordinatesDataProvider)
-                                                  .state
-                                                  .length,
-
-                                              maxExecution: 100, // 50% progress
-                                              // 50% progress
-                                              sizeOfCircle: Size(
-                                                  screenWidth * 0.5,
-                                                  screenWidth * 0.5),
-                                              incorrectExecutionCount: ref
-                                                  .watch(
-                                                      incorrectCoordinatesDataProvider)
-                                                  .state
-                                                  .length,
-                                            ),
+                                          SizedBox(
+                                            height: screenHeight * 0.04,
                                           ),
-                                          Center(
-                                            child: Column(
-                                              children: [
-                                                SizedBox(
-                                                  height: screenHeight * 0.04,
-                                                ),
-                                                IconButton(
-                                                  icon: Icon(
-                                                    Icons.directions_walk,
-                                                    color: tertiaryColor,
-                                                    size: screenWidth * .15,
-                                                  ),
-                                                  onPressed: () {},
-                                                ),
-                                                Text(
-                                                  "Executions :  ${widget.execCount}", // Text to display
-                                                  style: TextStyle(
-                                                    fontSize: screenWidth *
-                                                        textSizeModifierSet[
-                                                            'mediumText']!,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: colorSet[
-                                                        'tertiaryColor'],
-                                                    decoration:
-                                                        TextDecoration.none,
-                                                  ),
-                                                ),
-                                              ],
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.directions_walk,
+                                              color: tertiaryColor,
+                                              size: screenWidth * .15,
                                             ),
+                                            onPressed: () {},
                                           ),
-                                          Column(
-                                            children: [
-                                              SizedBox(
-                                                height: screenHeight * 0.18,
-                                              ),
-                                              Row(
-                                                children: [
-                                                  executionResults(
-                                                      fontSize: screenWidth *
-                                                          textSizeModifierSet[
-                                                              'smallText']!,
-                                                      screenWidth: screenWidth,
-                                                      label: "Average",
-                                                      value: ref.watch(
-                                                          averageFrameState),
-                                                      icon: Icons
-                                                          .auto_awesome_motion_rounded,
-                                                      modif: 0.5,
-                                                      colorResult: ref.watch(
-                                                          averageColorState)),
-                                                  Expanded(
-                                                    child: SizedBox(
-                                                      height: 0.18,
-                                                    ),
-                                                  ),
-                                                  executionResults(
-                                                      fontSize: screenWidth *
-                                                          textSizeModifierSet[
-                                                              'smallText']!,
-                                                      screenWidth: screenWidth,
-                                                      label: "Vairance",
-                                                      value: ref.watch(
-                                                          varianceFrameState),
-                                                      icon: Icons.more_horiz,
-                                                      modif: 0.5,
-                                                      colorResult: ref.watch(
-                                                          varianceColorState)),
-                                                ],
-                                              ),
-                                              Row(
-                                                children: [
-                                                  executionResults(
-                                                      fontSize: screenWidth *
-                                                          textSizeModifierSet[
-                                                              'smallText']!,
-                                                      screenWidth: screenWidth,
-                                                      label: "Min",
-                                                      value: ref
-                                                          .watch(minFrameState),
-                                                      icon: Icons.playlist_play,
-                                                      modif: 0.5,
-                                                      colorResult: ref.watch(
-                                                          minFrameColorState)),
-                                                  SizedBox(
-                                                    width: screenHeight * 0.02,
-                                                  ),
-                                                  executionResults(
-                                                      fontSize: screenWidth *
-                                                          textSizeModifierSet[
-                                                              'smallText']!,
-                                                      screenWidth: screenWidth,
-                                                      label: "Max",
-                                                      value: ref
-                                                          .watch(maxFrameState),
-                                                      icon: Icons.more_horiz,
-                                                      modif: 0.5,
-                                                      colorResult: ref.watch(
-                                                          maxFrameColorState)),
-                                                ],
-                                              ),
-                                              // Container(
-                                              //   width: screenWidth * 0.8,
-                                              //   height: screenWidth * 0.005,
-                                              //   decoration: BoxDecoration(
-                                              //     color:
-                                              //         colorSet['tertiaryColor'],
-                                              //   ),
-                                              // ),
-                                              // Text(
-                                              //   "Data quality : Good", // Text to display
-                                              //   style: TextStyle(
-                                              //     fontSize: screenWidth *
-                                              //         textSizeModifierSet[
-                                              //             'mediumText']!,
-                                              //     fontWeight: FontWeight.bold,
-                                              //     color:
-                                              //         colorSet['tertiaryColor'],
-                                              //     decoration:
-                                              //         TextDecoration.none,
-                                              //   ),
-                                              // ),
-                                            ],
+                                          Text(
+                                            "Positive:${ref.watch(coordinatesDataProvider).state.length} | Negative:${ref.watch(incorrectCoordinatesDataProvider).state.length}", // Text to display
+                                            style: TextStyle(
+                                              fontSize: screenWidth *
+                                                  textSizeModifierSet[
+                                                      'mediumText']!,
+                                              fontWeight: FontWeight.bold,
+                                              color: colorSet['tertiaryColor'],
+                                              decoration: TextDecoration.none,
+                                            ),
                                           ),
                                         ],
                                       ),
-
-                                      SizedBox(
-                                        height: screenHeight * 0.01,
-                                      ),
-                                      Align(
-                                        alignment: Alignment.bottomCenter,
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceEvenly,
-                                          children: [
-                                            // buildElevatedButton(
-                                            //   context: context,
-                                            //   label: "Review",
-                                            //   colorSet: colorSet,
-                                            //   textSizeModifierIndividual:
-                                            //       textSizeModifierSet[
-                                            //           'smallText2']!,
-                                            //   func: () {
-                                            //     setState(() {
-                                            //       review = true;
-                                            //     });
-                                            //   },
-                                            // ),
-                                            buildElevatedButton(
-                                              context: context,
-                                              label: "Submit",
-                                              colorSet: colorSet,
-                                              textSizeModifierIndividual:
-                                                  textSizeModifierSet[
-                                                      'smallText2']!,
-                                              func: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        collectionDataP1(
-                                                      correctDataset:
-                                                          widget.data,
-                                                      incorretcDataset:
-                                                          widget.data2,
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ],
+                                    ),
+                                    Column(
+                                      children: [
+                                        SizedBox(
+                                          height: screenHeight * 0.18,
                                         ),
+                                        Column(
+                                          children: List.generate(
+                                            3,
+                                            (index) => Row(
+                                              children: [
+                                                executionResults(
+                                                    fontSize: screenWidth *
+                                                        textSizeModifierSet[
+                                                            'smallText']!,
+                                                    screenWidth: screenWidth,
+                                                    label: content[index][0][1],
+                                                    value: content[index][0][2],
+                                                    icon: content[index][0][0],
+                                                    modif: 0.5,
+                                                    colorResult: ref.watch(
+                                                        averageColorState)),
+                                                Expanded(
+                                                  child: SizedBox(
+                                                    height: 0.18,
+                                                  ),
+                                                ),
+                                                executionResults(
+                                                    fontSize: screenWidth *
+                                                        textSizeModifierSet[
+                                                            'smallText']!,
+                                                    screenWidth: screenWidth,
+                                                    label: content[index][1][1],
+                                                    value: content[index][1][2],
+                                                    icon: content[index][1][0],
+                                                    modif: 0.5,
+                                                    colorResult: ref.watch(
+                                                        varianceColorState)),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+
+                                SizedBox(
+                                  height: screenHeight * 0.01,
+                                ),
+                                Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      buildElevatedButton(
+                                        context: context,
+                                        label: "Submit",
+                                        colorSet: colorSet,
+                                        textSizeModifierIndividual:
+                                            textSizeModifierSet['smallText2']!,
+                                        func: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  collectionDataP1(
+                                                correctDataset: widget.data,
+                                                incorretcDataset: widget.data2,
+                                                isRetraining: widget.isRetraining,
+                                              ),
+                                            ),
+                                          );
+                                        },
                                       ),
                                     ],
-                                  )
-                                  //
-                                ],
-                              )
-                            : ListWheelScrollView(
-                                itemExtent: 100,
-                                children: const <Widget>[
-                                  ElevatedButton(
-                                    onPressed: null,
-                                    child: Text(
-                                      'Item 1',
-                                      textAlign: TextAlign.start,
-                                      style: TextStyle(
-                                          fontSize: 25,
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold),
-                                    ),
                                   ),
-                                  ElevatedButton(
-                                    onPressed: null,
-                                    child: Text(
-                                      'Item 2',
-                                      textAlign: TextAlign.start,
-                                      style: TextStyle(
-                                          fontSize: 25,
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: null,
-                                    child: Text(
-                                      'Item 3',
-                                      textAlign: TextAlign.start,
-                                      style: TextStyle(
-                                          fontSize: 25,
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: null,
-                                    child: Text(
-                                      'Item 4',
-                                      textAlign: TextAlign.start,
-                                      style: TextStyle(
-                                          fontSize: 25,
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
+                            )
+                            //
+                          ],
+                        )
                       ],
                     ),
                   ],
@@ -499,18 +414,6 @@ class _cwDataAnalysisState extends ConsumerState<cwDataAnalysis> {
                               ),
                             ],
                           ),
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                                width: screenWidth * 0.02,
-                                height: screenWidth * 0.02,
-                                decoration: BoxDecoration(
-                                  color: colorResult,
-                                  borderRadius: BorderRadius.circular(10),
-                                ))
-                          ],
                         ),
                         SizedBox(
                           width: screenWidth * 0.018,

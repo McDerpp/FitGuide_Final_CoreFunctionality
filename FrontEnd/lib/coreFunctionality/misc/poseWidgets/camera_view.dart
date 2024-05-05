@@ -5,7 +5,8 @@ import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
+import 'package:frontend/coreFunctionality/custom_widgets/videoPreview.dart';
+import 'package:frontend/services/globalVariables.dart';
 import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
@@ -13,6 +14,7 @@ import 'package:video_player/video_player.dart';
 import '../../../services/provider_collection.dart';
 
 class CameraView extends ConsumerStatefulWidget {
+  bool isCollecting;
   CameraView(
       {Key? key,
       required this.customPaint,
@@ -20,7 +22,8 @@ class CameraView extends ConsumerStatefulWidget {
       this.onCameraFeedReady,
       this.onDetectorViewModeChanged,
       this.onCameraLensDirectionChanged,
-      this.initialCameraLensDirection = CameraLensDirection.front})
+      this.initialCameraLensDirection = CameraLensDirection.front,
+      this.isCollecting = false})
       : super(key: key);
 
   final CustomPaint? customPaint;
@@ -232,20 +235,58 @@ class _CameraViewState extends ConsumerState<CameraView> {
         (_controller!.value.aspectRatio *
             MediaQuery.of(context).size.aspectRatio);
 
-    return Transform.scale(
-      // scale: scale * 0.85,
-      scaleX: scale * 0.95,
-      scaleY: scale * 0.80,
-      // scaleY: scale * 0.65,
-      // alignment: Alignment.topCenter
-      alignment: Alignment.center,
-      // ,
-      child: CameraPreview(
-        _controller!,
-        child: widget.customPaint ?? Text(""),
-      ),
-    );
-    
+    return widget.isCollecting == false
+        ? Transform.scale(
+            scaleX: scale * 0.95,
+            scaleY: scale * 0.80,
+            alignment: Alignment.center,
+            child: ref.watch(showPreviewProvider) == true
+                ? Stack(
+                    children: [
+                      VideoPreviewScreen(
+                        videoPath: ref.watch(videoPreviewProvider),
+                        isInferencingPreview: true,
+                      ),
+                      Container(
+                        height: MediaQuery.of(context).size.height,
+                        width: MediaQuery.of(context).size.width,
+                        child: widget.customPaint,
+                      )
+                    ],
+                  )
+                : CameraPreview(
+                    _controller!,
+                    child: widget.customPaint ?? Text(""),
+                  ),
+          )
+        : Transform.scale(
+            scaleX: scale * 0.95,
+            scaleY: scale * 0.80,
+            alignment: Alignment.center,
+            child: CameraPreview(
+              _controller!,
+              child: widget.customPaint ?? Text(""),
+            ),
+          );
+
+    // ref.watch(showPreviewProvider) == true
+    // ? Stack(
+    //     children: [
+    //       Container(
+    //         height: screenHeight,
+    //         width: screenWidth,
+    //         color: Colors.black87.withOpacity(0.85),
+    //       ),
+    //       VideoPreviewScreen(
+    //         videoPath: video,
+    //         isInferencingPreview: true,
+    //       ),
+    //       Container(
+    //         child: Text("try this out!"),
+    //       )
+    //     ],
+    //   )
+    // :
 
     // return Container(
     //   color: Colors.black,
@@ -462,14 +503,9 @@ class _CameraViewState extends ConsumerState<CameraView> {
   InputImage? _inputImageFromCameraImage(CameraImage image) {
     if (_controller == null) return null;
 
-    // get image rotation
-    // it is used in android to convert the InputImage from Dart to Java: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/google_mlkit_commons/android/src/main/java/com/google_mlkit_commons/InputImageConverter.java
-    // `rotation` is not used in iOS to convert the InputImage from Dart to Obj-C: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/google_mlkit_commons/ios/Classes/MLKVisionImage%2BFlutterPlugin.m
-    // in both platforms `rotation` and `camera.lensDirection` can be used to compensate `x` and `y` coordinates on a canvas: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/example/lib/vision_detector_views/painters/coordinates_translator.dart
     final camera = _cameras[_cameraIndex];
     final sensorOrientation = camera.sensorOrientation;
-    // print(
-    //     'lensDirection: ${camera.lensDirection}, sensorOrientation: $sensorOrientation, ${_controller?.value.deviceOrientation} ${_controller?.value.lockedCaptureOrientation} ${_controller?.value.isCaptureOrientationLocked}');
+
     InputImageRotation? rotation;
     if (Platform.isIOS) {
       rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
@@ -486,7 +522,6 @@ class _CameraViewState extends ConsumerState<CameraView> {
             (sensorOrientation - rotationCompensation + 360) % 360;
       }
       rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
-      // print('rotationCompensation: $rotationCompensation');
     }
     if (rotation == null) return null;
     // print('final rotation: $rotation');

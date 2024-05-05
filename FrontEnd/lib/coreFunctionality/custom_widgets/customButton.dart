@@ -1,6 +1,6 @@
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
+import 'package:frontend/services/globalVariables.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
 import 'dart:math';

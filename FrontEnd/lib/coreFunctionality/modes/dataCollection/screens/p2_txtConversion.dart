@@ -5,7 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/coreFunctionality/custom_widgets/customButton.dart';
 import 'package:frontend/coreFunctionality/modes/dataCollection/screens/p3_videoRecord.dart';
-import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
+import 'package:frontend/coreFunctionality/modes/dataCollection/screens/p5_modelTraining.dart';
+import 'package:frontend/services/globalVariables.dart';
 import 'package:frontend/coreFunctionality/modes/dataCollection/screens/p4_exerciseDetail.dart';
 import 'package:frontend/services/api.dart';
 import 'package:path_provider/path_provider.dart';
@@ -18,12 +19,12 @@ import '../../../../services/provider_collection.dart';
 class collectionDataP1 extends ConsumerStatefulWidget {
   final List<List<List<double>>> correctDataset;
   final List<List<List<double>>> incorretcDataset;
-
-  const collectionDataP1({
-    super.key,
-    required this.correctDataset,
-    required this.incorretcDataset,
-  });
+  final bool isRetraining;
+  const collectionDataP1(
+      {super.key,
+      required this.correctDataset,
+      required this.incorretcDataset,
+      this.isRetraining = false});
 
   @override
   ConsumerState<collectionDataP1> createState() => _collectionDataP1State();
@@ -61,13 +62,18 @@ class _collectionDataP1State extends ConsumerState<collectionDataP1> {
   ];
 
   Future<void> translateCollectedDatatoTxt(
-      List<dynamic> dataCollected, bool isCorrectDataset) async {
+    List<dynamic> dataCollected,
+    bool isCorrectDataset,
+  ) async {
+    print("translating now123123");
     Directory externalDir = await getApplicationDocumentsDirectory();
-    String externalPath = externalDir!.path;
+    String externalPath = externalDir.path;
 
     String filePath = isCorrectDataset == true
         ? '$externalPath/coordinatesCollected.txt'
         : '$externalPath/coordinatesCollected(incorrect).txt';
+
+    print("filpathhh -->${filePath} ");
     File file = File(filePath);
     file.writeAsStringSync('');
     int progressCtr = 0;
@@ -108,13 +114,6 @@ class _collectionDataP1State extends ConsumerState<collectionDataP1> {
     isCorrectDataset == true
         ? ref.read(correctDataSetPath.notifier).state = filePath
         : ref.read(incorrectDataSetPath.notifier).state = filePath;
-
-    // getCSRFToken();
-    // getSessionKey().then((value) {
-    //   ref.watch(sessionKeyProvider.notifier).state = value;
-    // });
-
-    collectDatasetInfo(ref);
   }
 
   @override
@@ -146,10 +145,11 @@ class _collectionDataP1State extends ConsumerState<collectionDataP1> {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
-    Map<String, double> textSizeModif = ref.watch(textSizeModifier);
     Color mainColor = ref.watch(mainColorState);
     Color secondaryColor = ref.watch(secondaryColorState);
     Color tertiaryColor = ref.watch(tertiaryColorState);
+    Map<String, double> textSizeModif = ref.watch(textSizeModifier);
+
     late Map<String, Color> colorSet;
     colorSet = {
       "mainColor": mainColor,
@@ -211,9 +211,11 @@ class _collectionDataP1State extends ConsumerState<collectionDataP1> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      const collectionDataP2(),
-                                  // const collectionDataP2(),
+                                  builder: (context) => widget.isRetraining == true
+                                      ? const collectionDataP4(
+                                          isRetraining: true,
+                                        )
+                                      : const collectionDataP2(),
                                 ),
                               );
                             },

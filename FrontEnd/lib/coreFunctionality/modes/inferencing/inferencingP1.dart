@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/coreFunctionality/custom_widgets/customButton.dart';
 import 'package:frontend/coreFunctionality/mainUISettings.dart';
 import 'package:frontend/services/provider_collection.dart';
-import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
+import 'package:frontend/services/globalVariables.dart';
 
 class inferencingP1 extends ConsumerStatefulWidget {
   final List<Map<String, dynamic>> exerciseProgram;

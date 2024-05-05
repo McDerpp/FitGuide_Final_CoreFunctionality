@@ -1,8 +1,6 @@
-
 void calculateVarianceIsolate(
     int numFrameGroup, List<List<List<double>>> coordinatesData) {
   if (coordinatesData.length % numFrameGroup == 0) {
-    double variance = 0;
     List<int> sequenceLen = [];
     List<int> sequenceTally = [];
     List<List<List<double>>> individualCoorManager = [];
@@ -14,7 +12,6 @@ void calculateVarianceIsolate(
         sequenceTally.add(1);
       } else {
         int tempIndex = sequenceLen.indexOf(sequenceData.length);
-        int tempSeq = sequenceLen[tempIndex];
 
         sequenceTally[tempIndex] = sequenceTally[tempIndex]++;
         for (int ctr1 = 0;

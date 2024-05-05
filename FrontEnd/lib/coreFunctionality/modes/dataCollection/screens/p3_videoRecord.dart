@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/coreFunctionality/custom_widgets/customButton.dart';
-import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
+import 'package:frontend/services/globalVariables.dart';
 import 'package:frontend/coreFunctionality/logicFunction/isolateProcessPDV.dart';
 import 'package:frontend/coreFunctionality/mainUISettings.dart';
 import 'package:frontend/coreFunctionality/misc/painters/pose_painter.dart';
@@ -143,6 +143,7 @@ class _collectionDataP2State extends ConsumerState<collectionDataP2> {
         inputImage.metadata!.rotation,
         _cameraLensDirection,
         1,
+        ref.watch(ignoreCoordinatesProvider),
       );
       _customPaint = CustomPaint(painter: painter);
     } else {

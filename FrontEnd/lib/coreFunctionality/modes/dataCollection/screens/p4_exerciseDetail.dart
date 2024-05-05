@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/coreFunctionality/custom_widgets/customButton.dart';
 import 'package:frontend/coreFunctionality/custom_widgets/customWidgetPDV.dart';
 import 'package:frontend/coreFunctionality/modes/dataCollection/screens/p5_modelTraining.dart';
-import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
+import 'package:frontend/services/globalVariables.dart';
 import 'package:frontend/services/api.dart';
 import 'package:showcaseview/showcaseview.dart';
 
@@ -381,14 +381,12 @@ class _collectionDataP3State extends ConsumerState<collectionDataP3> {
                                   ref.watch(textSizeModifier)["smallText2"]!,
                               func: () {
                                 setState(() {});
-                                collectDatasetInfo(ref);
 
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
                                         const collectionDataP4(),
-                                    // const collectionDataP2(),
                                   ),
                                 );
                               },

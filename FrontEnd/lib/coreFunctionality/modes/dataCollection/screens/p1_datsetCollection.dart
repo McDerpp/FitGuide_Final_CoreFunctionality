@@ -7,9 +7,9 @@ import 'package:frontend/coreFunctionality/custom_widgets/customButton.dart';
 import 'dart:core';
 
 import 'package:frontend/coreFunctionality/custom_widgets/cwIgnorePose.dart';
+import 'package:frontend/coreFunctionality/custom_widgets/dialogBoxNotif.dart';
 import 'package:frontend/coreFunctionality/custom_widgets/errorWidget.dart';
-import 'package:frontend/coreFunctionality/modes/dataCollection/screens/p6_reviewDataset.dart';
-import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
+import 'package:frontend/services/globalVariables.dart';
 import 'package:frontend/services/provider_collection.dart';
 import '../../../custom_widgets/executionAnalysis.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -17,9 +17,10 @@ import 'package:showcaseview/showcaseview.dart';
 import '../../../mainUISettings.dart';
 
 class collectionDataTraining extends ConsumerStatefulWidget {
+  final bool isRetraining;
   // final Widget exerciseList;
 
-  const collectionDataTraining({super.key});
+  const collectionDataTraining({super.key, this.isRetraining = false});
 
   @override
   ConsumerState<collectionDataTraining> createState() =>
@@ -59,9 +60,11 @@ class _collectionDataTrainingState
   int maxFrame = 0;
   String resultAvgFrames = '';
   int execTotalFrames = 0;
+  int execTotalNegativeFrames = 0;
 
   late Map<String, Color> colorSet;
 
+  // child: ref.watch(isCollectingCorrect.notifier).state == true
   void undoExecution(int undoTimes) {
     int temp = 0;
     int tempexecTotalFrames = execTotalFrames;
@@ -70,8 +73,9 @@ class _collectionDataTrainingState
         tempexecTotalFrames = (tempexecTotalFrames -
                 ref.read(coordinatesDataProvider).state.last.length)
             .toInt();
-        ref.read(coordinatesDataProvider).state.removeLast();
-        ref.read(numExec.notifier).state--;
+        ref.watch(isCollectingCorrect) == true
+            ? ref.watch(coordinatesDataProvider).state.removeLast()
+            : ref.watch(incorrectCoordinatesDataProvider).state.removeLast();
       }
     }
 
@@ -85,6 +89,15 @@ class _collectionDataTrainingState
       resultAvgFrames = avgFrames.toStringAsFixed(2);
       avgFrames = double.parse(resultAvgFrames);
     });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    undoExecution(ref.watch(coordinatesDataProvider).state.length);
+    undoExecution(ref.watch(incorrectCoordinatesDataProvider).state.length);
   }
 
   @override
@@ -121,53 +134,6 @@ class _collectionDataTrainingState
       displayError2 = luminanceError(opacity: 0.0);
     }
 
-    try {
-      avgFrames = execTotalFrames / ref.watch(numExec);
-      resultAvgFrames = avgFrames.toStringAsFixed(2);
-      avgFrames = double.parse(resultAvgFrames);
-      ref.read(averageFrameState.notifier).state = avgFrames;
-
-      if (avgFrames <= ref.watch(averageThresholdBad)) {
-        averageColor = Colors.red;
-      } else if (avgFrames >= ref.watch(averageThresholdBad) &&
-          avgFrames <= ref.watch(averageThresholdIdeal)) {
-        averageColor = Colors.orange;
-      } else if (avgFrames >= ref.watch(averageThresholdIdeal)) {
-        averageColor = Colors.green;
-      }
-      ref.read(averageColorState.notifier).state = averageColor;
-    } catch (error) {
-      avgFrames = 0;
-    }
-
-    try {
-      if (minFrame <= ref.watch(minFrameThresholdBad)) {
-        minFrameColor = Colors.red;
-      } else if (minFrame >= ref.watch(minFrameThresholdBad) &&
-          minFrame <= ref.watch(minFrameThresholdIdeal)) {
-        minFrameColor = Colors.orange;
-      } else if (minFrame >= ref.watch(minFrameThresholdIdeal)) {
-        minFrameColor = Colors.green;
-      }
-      ref.read(minFrameColorState.notifier).state = minFrameColor;
-    } catch (error) {
-      minFrame = 0;
-    }
-
-    try {
-      if (maxFrame <= ref.watch(maxFrameThresholdBad)) {
-        maxFrameColor = Colors.red;
-      } else if (maxFrame >= ref.watch(maxFrameThresholdBad) &&
-          maxFrame <= ref.watch(maxFrameThresholdIdeal)) {
-        maxFrameColor = Colors.orange;
-      } else if (maxFrame >= ref.watch(maxFrameThresholdIdeal)) {
-        maxFrameColor = Colors.green;
-      }
-      ref.read(maxFrameColorState.notifier).state = maxFrameColor;
-    } catch (error) {
-      maxFrame = 0;
-    }
-
     return Stack(
       children: [
         // --------------------------------------------------------------------------[HELP BUTTON]
@@ -185,10 +151,6 @@ class _collectionDataTrainingState
                 tutorial_pause,
                 tutorial_deleteAll,
                 tutorial_ignorePose,
-                // tutorial_avgFrame,
-                // tutorial_variance,
-                // tutorial_avgFrame2,
-                // tutorial_variance2,
                 tutorial_lightingError,
                 tutorial_poseError,
                 tutorial_progressBar,
@@ -223,18 +185,50 @@ class _collectionDataTrainingState
                     key: tutorial_progressBar,
                     title: 'Progress Bar',
                     description:
-                        'This indicates whether you whole body is present directly at the camera(Exceptions on parts of the body you ignored).',
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(screenWidth * 0.07),
-                      child: LinearProgressIndicator(
-                        value: ref.watch(numExec) > requiredDataNum
-                            ? requiredDataNum
-                            : ref.watch(numExec) / requiredDataNum,
-                        backgroundColor: tertiaryColor.withOpacity(0.5),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                            secondaryColor.withOpacity(0.5)),
-                      ),
-                    ),
+                        'This indicates te amount of reps or data performed and collected.',
+                    child: ref.watch(isCollectingCorrect.notifier).state == true
+                        ? ClipRRect(
+                            borderRadius:
+                                BorderRadius.circular(screenWidth * 0.07),
+                            child: LinearProgressIndicator(
+                              value: ref
+                                          .watch(coordinatesDataProvider)
+                                          .state
+                                          .length >
+                                      requiredDataNum
+                                  ? requiredDataNum
+                                  : ref
+                                          .watch(coordinatesDataProvider)
+                                          .state
+                                          .length /
+                                      requiredDataNum,
+                              backgroundColor: tertiaryColor.withOpacity(0.5),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.green.withOpacity(0.5)),
+                            ),
+                          )
+                        : ClipRRect(
+                            borderRadius:
+                                BorderRadius.circular(screenWidth * 0.07),
+                            child: LinearProgressIndicator(
+                              value: ref
+                                          .watch(
+                                              incorrectCoordinatesDataProvider)
+                                          .state
+                                          .length >
+                                      requiredDataNum
+                                  ? requiredDataNum
+                                  : ref
+                                          .watch(
+                                              incorrectCoordinatesDataProvider)
+                                          .state
+                                          .length /
+                                      requiredDataNum,
+                              backgroundColor: tertiaryColor.withOpacity(0.5),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  secondaryColor.withOpacity(0.5)),
+                            ),
+                          ),
                   ),
                 ),
               ],
@@ -258,11 +252,15 @@ class _collectionDataTrainingState
                     textSizeModifierIndividual:
                         textSizeModifierSet['smallText2']!,
                     func: () {
-                      ref.watch(isCollectingCorrect.notifier).state == true
-                          ? ref.watch(isCollectingCorrect.notifier).state =
-                              false
-                          : ref.watch(isCollectingCorrect.notifier).state =
-                              true;
+                      ref.watch(isPerforming.notifier).state = false;
+                      if (ref.watch(isCollectingCorrect.notifier).state ==
+                          true) {
+                        dialogBoxNotif(context, 6, "aasetsdaf");
+                        ref.watch(isCollectingCorrect.notifier).state = false;
+                      } else {
+                        dialogBoxNotif(context, 5, "aasetsdaf");
+                        ref.watch(isCollectingCorrect.notifier).state = true;
+                      }
                     }),
               ],
             ),
@@ -329,8 +327,15 @@ class _collectionDataTrainingState
                           size: screenWidth * .06, //
                         ),
                         onPressed: () {
-                          undoExecution(
-                              ref.read(coordinatesDataProvider).state.length);
+                          undoExecution(ref
+                                      .watch(isCollectingCorrect.notifier)
+                                      .state ==
+                                  true
+                              ? ref.watch(coordinatesDataProvider).state.length
+                              : ref
+                                  .watch(incorrectCoordinatesDataProvider)
+                                  .state
+                                  .length);
                         },
                       ),
                     ),
@@ -366,6 +371,7 @@ class _collectionDataTrainingState
                 execCount: ref.watch(numExec),
                 data: ref.watch(coordinatesDataProvider).state,
                 data2: ref.watch(incorrectCoordinatesDataProvider).state,
+                isRetraining: widget.isRetraining,
               ),
             ),
           ),

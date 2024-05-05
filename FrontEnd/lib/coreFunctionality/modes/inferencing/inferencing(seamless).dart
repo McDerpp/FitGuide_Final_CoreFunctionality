@@ -8,9 +8,12 @@ import 'package:flutter/foundation.dart';
 // Note: heavy imports...may cause lots of load times in between running
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/coreFunctionality/custom_widgets/customButton.dart';
+import 'package:frontend/coreFunctionality/custom_widgets/dialogBox.dart';
+import 'package:frontend/coreFunctionality/custom_widgets/dialogBoxNotif.dart';
 import 'package:frontend/coreFunctionality/custom_widgets/videoPreview.dart';
 import 'package:frontend/services/provider_collection.dart';
-import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
+import 'package:frontend/services/globalVariables.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 
@@ -42,6 +45,13 @@ class inferencingSeamless extends ConsumerStatefulWidget {
 class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+// ADJUSTABLE VARIABLES
+  int showPreviewCtrMax = 250;
+
+// THIS IS TEMPORARY FOR DEBUGGING ONLY! CHANGE THIS TO ACTUAL INPUT REQUIRED
+  int tensorInputNeeded = 9;
+
+// exercise detials
   String nameOfExercise = "";
   String model = "";
   String video = "";
@@ -50,14 +60,10 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
   int setsNeeded = 0;
   int restDuration = 0;
 
-  // ---------------------inferencing mode variables----------------------------------------------------------
   // isolate initialization for heavy process
   RootIsolateToken rootIsolateTokenNormalization = RootIsolateToken.instance!;
   RootIsolateToken rootIsolateTokenNoMovement = RootIsolateToken.instance!;
   RootIsolateToken rootIsolateTokenInferencing = RootIsolateToken.instance!;
-
-// THIS IS TEMPORARY FOR DEBUGGING ONLY! CHANGE THIS TO ACTUAL INPUT REQUIRED
-  int tensorInputNeeded = 9;
 
   List<double> prevCoordinates = [];
   List<double> currentCoordinates = [];
@@ -319,6 +325,7 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
 
 // if all the sets have been performed
       if (setsAchieved == setsNeeded) {
+        dialogBoxNotif(context, 3, "aasetsdaf");
         ref.watch(showPreviewProvider.notifier).state = true;
         setState(() {
           if (exerciseListCtr <= maxExerciseList) {
@@ -385,13 +392,15 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
                 inferenceBuffer.elementAt(1) == true &&
                 nowPerforming == true) {
               inferenceCorrectCtr++;
+
               showPreviewCtr = 0;
             }
           }
           if (ref.watch(showPreviewProvider) == true) {
             setState(() {
               ref.watch(showPreviewProvider.notifier).state = false;
-              showPreviewPass = true;
+              // showPreviewPass = true;
+              dialogBoxNotif(context, 2, "aasetsdaf");
             });
             showPreviewCtr = 0;
           }
@@ -402,10 +411,15 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
             showPreviewCtr++;
           }
 
-          if (showPreviewCtr >= 50) {
-            setState(() {
-              ref.watch(showPreviewProvider.notifier).state = true;
-            });
+          if (showPreviewCtr == showPreviewCtrMax &&
+              ref.watch(showPreviewProvider) == false) {
+            dialogBoxNotif(context, 1, "aasetsdaf");
+
+            setState(
+              () {
+                ref.watch(showPreviewProvider.notifier).state = true;
+              },
+            );
           }
         }
         if (queueInferencingData.isNotEmpty) {
@@ -426,6 +440,8 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
         inputImage.metadata!.rotation,
         _cameraLensDirection,
         executionStateResult,
+        //=========================================================================> NEEDS TO BE INITIALIZED FIRST FOR INFERENCING TO CHECK THE IGNORE COORDINATES
+        ref.watch(ignoreCoordinatesProvider)
       );
       _customPaint = CustomPaint(painter: painter);
     } else {
@@ -611,7 +627,10 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
             widget.exerciseList[exerciseListCtr]['inputNum'];
         nameOfExercise = widget.exerciseList[exerciseListCtr]['nameOfExercise'];
         model = widget.exerciseList[exerciseListCtr]['modelPath'];
-        video = widget.exerciseList[exerciseListCtr]['videoPath'];
+        // video = widget.exerciseList[exerciseListCtr]['videoPath'];
+        ref.watch(videoPreviewProvider.notifier).state =
+            widget.exerciseList[exerciseListCtr]['videoPath'];
+
         ignoredCoordinates =
             widget.exerciseList[exerciseListCtr]['ignoredCoordinates'];
         restDuration = widget.exerciseList[exerciseListCtr]['restDuration'];
@@ -660,6 +679,12 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
     } else {
       displayError2 = displayErrorPose2(context, 0.0);
     }
+
+    final colorSetState = ref.watch(ColorSet);
+    final colorSet1 = colorSetState["ColorSet1"]!;
+
+    var textSizeModifierSet = ref.watch(textSizeModifier);
+    var textSizeModifierSetIndividual = textSizeModifierSet["smallText"]!;
 
     return Scaffold(
       body: Stack(
@@ -843,64 +868,6 @@ class _inferencingSeamlessState extends ConsumerState<inferencingSeamless> {
           ),
 
 // -----------------------------------------------------------------------------------------------------------[Progress Container]
-
-          // Align(
-          //   alignment: Alignment(0.0, -0.94),
-          //   child: Container(
-          //     width: screenWidth * 0.83,
-          //     height: screenHeight * 0.05,
-          //     decoration: BoxDecoration(
-          //       color: mainColor.withOpacity(0.75),
-          //       borderRadius: BorderRadius.circular(screenWidth * 0.03),
-          //     ),
-          //     child: Column(
-          //       mainAxisAlignment: MainAxisAlignment.center,
-          //       children: [
-          //         Container(
-          //           width: screenWidth * 0.80,
-          //           height: screenHeight * 0.017,
-          //           decoration: BoxDecoration(
-          //             color: tertiaryColor,
-          //             borderRadius: BorderRadius.circular(screenWidth * 0.07),
-          //           ),
-          //           child: ClipRRect(
-          //             borderRadius: BorderRadius.circular(screenWidth * 0.07),
-          //             child: LinearProgressIndicator(
-          //               value: inferenceCorrectCtr / numberOfExecution,
-          //               backgroundColor: tertiaryColor.withOpacity(0.5),
-          //               valueColor: AlwaysStoppedAnimation<Color>(
-          //                   secondaryColor.withOpacity(0.5)),
-          //             ),
-          //           ),
-          //         ),
-          //         SizedBox(
-          //           height: screenHeight * 0.005,
-          //         ),
-          //         buildContainerList(setsNeeded, setsAchieved, context,
-          //             spaceModifier: .8),
-          //       ],
-          //     ),
-          //   ),
-          // ),
-
-          ref.watch(showPreviewProvider) == true
-              ? Stack(
-                  children: [
-                    Container(
-                      height: screenHeight,
-                      width: screenWidth,
-                      color: Colors.black87.withOpacity(0.85),
-                    ),
-                    VideoPreviewScreen(
-                      videoPath: video,
-                      isInferencingPreview: true,
-                    ),
-                    Container(
-                      child: Text("try this out!"),
-                    )
-                  ],
-                )
-              : noDisplay(),
         ],
       ),
     );

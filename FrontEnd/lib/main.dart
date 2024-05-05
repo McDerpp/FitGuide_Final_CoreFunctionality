@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/coreFunctionality/custom_widgets/dialogBoxNotif.dart';
+import 'package:frontend/coreFunctionality/custom_widgets/executionAnalysis.dart';
 import 'package:frontend/coreFunctionality/custom_widgets/videoPreview.dart';
 import 'package:frontend/coreFunctionality/modes/dataCollection/screens/p3_videoRecord.dart';
 import 'package:frontend/coreFunctionality/modes/dataCollection/screens/p4_exerciseDetail.dart';
@@ -9,6 +11,7 @@ import 'package:frontend/coreFunctionality/modes/inferencing/inferencing(seamles
 // import 'coreFunctionality/modes/dataCollection/screens/collectionData.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/coreFunctionality/modes/retraining/modelRetrianing.dart';
 import 'coreFunctionality/modes/dataCollection/screens/p2_txtConversion.dart';
 import 'coreFunctionality/modes/inferencing/inferencing.dart';
 import 'coreFunctionality/modes/inferencing/inferencingP1.dart';
@@ -62,7 +65,7 @@ class Home extends StatelessWidget {
       'setsNeeded': 2,
       'numberOfExecution': 2,
       'modelPath':
-          'assets/models/wholeModel/converted_model_whole_model4782(loss_0.005)(acc_0.999).tflite',
+          'assets/models/wholeModel/models.tflite',
       'videoPath': 'assets/videos/jumpNjacksVid.mp4',
       'ignoredCoordinates': ["left_arm", "left_leg"],
       'inputNum': 9,
@@ -77,44 +80,73 @@ class Home extends StatelessWidget {
           'assets/models/wholeModel/converted_model_whole_model4782(loss_0.005)(acc_0.999).tflite',
       'videoPath': 'assets/videos/jumpNjacksVid.mp4',
       'ignoredCoordinates': ["left_arm", "left_leg"],
-      'inputNum': 9,
+      'inputNum': 5,
     };
 
     List<Map<String, dynamic>> exerciseProgram1 = [];
     exerciseProgram1.add(exerciseDetail2);
-    exerciseProgram1.add(exerciseDetail1);
+    exerciseProgram1.add(exerciseDetail2);
+
+    // exerciseProgram1.add(exerciseDetail1);
 
     return Scaffold(
-        body: Table(
-      border: TableBorder.all(),
-      children: [
-        TableRow(
-          children: [
-            ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => inferencingSeamless(
-                              exerciseList: exerciseProgram1,
-                            )),
-                  );
-                },
-                child: const Text("Inferencing")),
-            ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => collectionData()),
-                  );
-                },
-                child: const Text("Collect Data "))
-          ],
-        ),
-      ],
-    )
-
-        // body: collectionData(),
-        );
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => inferencingSeamless(
+                                exerciseList: exerciseProgram1,
+                              )),
+                    );
+                  },
+                  child: const Text("Inferencing")),
+              ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const collectionData()),
+                    );
+                  },
+                  child: const Text("Collect Data ")),
+              ElevatedButton(
+                  onPressed: () {
+                    dialogBoxNotif(context, 2, "aasetsdaf");
+                  },
+                  child: const Text("notification test ")),
+              ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const modelRetraining()),
+                    );
+                  },
+                  child: const Text("retraining ")),
+              ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const modelRetraining()),
+                    );
+                  },
+                  child: const Text("retraining ")),
+              cwDataAnalysis(
+                execCount: 5,
+                data: [],
+                data2: [],
+              ),
+            ],
+          ),
+        ],
+      ),
+      // body: collectionData(),
+    );
   }
 }

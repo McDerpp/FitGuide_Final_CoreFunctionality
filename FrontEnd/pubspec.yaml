@@ -38,6 +38,8 @@ dependencies:
   # permission_handler: ^12.0.0
   video_player: ^2.2.6  
   flutter_camera:
+  flutter_cache_manager: ^3.3.0
+
 
 
 
@@ -60,6 +62,7 @@ dependencies:
   scroll_snap_list: ^0.9.1
   stop_watch_timer: ^3.1.1
   animated_widgets: ^1.1.0
+  http: ^1.2.0
   # web_socket_channel: ^2.4.0
   # google_ml_kit: ^4.0.0
 
@@ -97,6 +100,7 @@ flutter:
   assets:
     - assets/models/wholeModel/
     - assets/videos/
+    - assets/
 
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg

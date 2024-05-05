@@ -1,18 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/coreFunctionality/custom_widgets/customButton.dart';
+import 'package:frontend/services/api.dart';
 
-import '../../globalStuff/provider/globalVariables.dart';
+import '../../../../services/globalVariables.dart';
 import '../../../../services/provider_collection.dart';
 
 class collectionDataP4 extends ConsumerStatefulWidget {
-  const collectionDataP4({super.key});
+  final bool isRetraining;
+  const collectionDataP4({
+    super.key,
+    this.isRetraining = false,
+  });
 
   @override
   ConsumerState<collectionDataP4> createState() => _collectionDataP4State();
 }
 
 class _collectionDataP4State extends ConsumerState<collectionDataP4> {
+  @override
+  void initState() {
+    print("FINAL STEP23423423");
+    // TODO: implement initState
+    super.initState();
+    if (widget.isRetraining == true) {
+      print("retraining finalraerawer");
+      retrainModel(ref, ref.watch(exerciseID).toString());
+    } else {
+      collectDatasetInfo(ref);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;

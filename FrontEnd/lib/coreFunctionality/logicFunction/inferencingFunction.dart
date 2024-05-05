@@ -29,17 +29,26 @@ List<List<double>> padding(List<List<double>> input, int requiredLength) {
         List.from(paddingList)); // Create a new instance of the padding list
   }
 
-  print("result of padding is --> ${result.length}");
   return result;
 }
 
 Future<void> modelInitialize(String modelPath) async {
-  final head = await tfl.Interpreter.fromAsset(modelPath);
+  try {
+    final head = await tfl.Interpreter.fromAsset(modelPath);
+  } catch (error) {
+    print("ERROR AT MODEL INITIALIZATION ---> $error");
+  }
 }
 
 Future<bool> inferencingCoordinatesData(
     Map<String, dynamic> inputs, String modelPath, int inputNum) async {
+  try {
+    final head = await tfl.Interpreter.fromAsset(modelPath);
+  } catch (error) {
+    print("ERROR AT MODEL INITIALIZATION ---> $error");
+  }
   final head = await tfl.Interpreter.fromAsset(modelPath);
+
   tfl.Tensor inputDetails = head.getInputTensor(0);
 
   // print("head.getInputTensor(0) ---> ${head.getInputTensor(0)}");
@@ -56,7 +65,6 @@ Future<bool> inferencingCoordinatesData(
 
   try {
     head.run(coordinates, output);
-    print("output of inferencing( ---> $output");
   } catch (error) {
     print("error at inferencing ---> $error");
   }

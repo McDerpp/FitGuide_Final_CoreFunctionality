@@ -1,15 +1,19 @@
 import 'dart:convert';
-import 'package:frontend/coreFunctionality/modes/globalStuff/provider/globalVariables.dart';
+import 'package:frontend/services/globalVariables.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import 'provider_collection.dart';
+import 'package:path/path.dart' as path;
 
 String csrfToken = '';
+String ipAddress = "192.168.1.26:8000";
 
 Future<String> getCSRFToken() async {
-  final url = Uri.parse('http://192.168.1.18:8000/getToken/');
+  final url = Uri.parse('http://${ipAddress}/getToken/');
   final response = await http.get(url);
   String convertedData = '';
   if (response.statusCode == 200) {
@@ -23,14 +27,118 @@ Future<String> getCSRFToken() async {
   }
 }
 
+Future<dynamic> getRetrainInfo() async {
+  var url = Uri.parse('http://${ipAddress}/modelTraining/get_retrain_info/');
+  try {
+    var response = await http.get(url);
+    if (response.statusCode == 200) {
+      var responseData = response.body;
+      print("responseData---> $responseData");
+
+      dynamic responseJson = json.decode(responseData);
+
+      return responseJson;
+    } else {
+      print('Request failed with status: ${response.statusCode}');
+    }
+  } catch (error) {
+    print('Error: $error');
+  }
+}
+
+// Future<String> getModel(int exercisePK) async {
+//   var url = Uri.parse('http://${ipAddress}/modelTraining/get_model/$exercisePK/');
+
+//   try {
+//     var response = await http.get(url);
+//     if (response.statusCode == 200) {
+//     final documentsDirectory = await getApplicationDocumentsDirectory();
+//     print("documentsDirectory -- > $documentsDirectory");
+
+//     const filePath = 'assets/models/wholeModel';
+//     print("filePath -- > $filePath");
+
+//     final file = File(filePath);
+//     await file.writeAsBytes(response.bodyBytes);
+
+//       // var responseData = response.body;
+//       // print("responseData---> $responseData");
+
+//       // dynamic responseJson = json.decode(responseData);
+
+//       // return filePath;
+//     } else {
+//       print('Request failed with status: ${response.statusCode}');
+//     }
+//   } catch (error) {
+//     print('Error at get model: $error');
+//   }
+
+//   return "filePath";
+
+// }
+
+Future<String?> getModel(int exercisePK) async {
+  var url =
+      Uri.parse('http://${ipAddress}/modelTraining/get_model/$exercisePK/');
+
+  try {
+    var response = await http.get(url);
+    if (response.statusCode == 200) {
+      final documentsDirectory = await getTemporaryDirectory();
+      final filePath = path.join(documentsDirectory.path, 'model.tflite');
+
+      // Create the necessary directories
+      await Directory(path.dirname(filePath)).create(recursive: true);
+
+      final file = File(filePath);
+      await file.writeAsBytes(response.bodyBytes);
+
+      return filePath;
+    } else {
+      print('Request failed with status: ${response.statusCode}');
+    }
+  } catch (error) {
+    print('Error: $error');
+  }
+
+  return null; // Return null in case of error or non-200 response
+}
+
+Future<File?> getVideo(int exercisePK) async {
+  var url =
+      Uri.parse('http://${ipAddress}/modelTraining/get_demo/$exercisePK/');
+
+  try {
+    var response = await http.get(url);
+    if (response.statusCode == 200) {
+      print("demo response received ---> ${response}");
+      final documentsDirectory = await getTemporaryDirectory();
+      final filePath = path.join(documentsDirectory.path, 'videoDemo.mp4');
+
+      final file = File(filePath);
+      print("video demo---> ${file}");
+      await file.writeAsBytes(response.bodyBytes);
+
+      return file;
+    } else {
+      print('Request failed with status: ${response.statusCode}');
+    }
+  } catch (error) {
+    print('Error: $error');
+  }
+
+  return null; // Return null in case of error or non-200 response
+}
+
 Future<void> collectDatasetInfo(WidgetRef ref) async {
-  var uri = Uri.parse('http://192.168.1.18:8000/modelTraining/datasetSubmit/');
+  var uri = Uri.parse('http://${ipAddress}/modelTraining/datasetSubmit/');
 
   String sessionKey = ref.watch(sessionKeyProvider);
-  String filePath = ref.watch(correctDataSetPath);
-  String filePath2 = ref.watch(incorrectDataSetPath);
+  String positiveData = ref.watch(correctDataSetPath);
+  String negativeData = ref.watch(incorrectDataSetPath);
+  String videoDemo = ref.watch(vidPath);
 
-  print("FILE PATH 30423423 -> $filePath");
   final headers = {
     'Authorization': sessionKey,
   };
@@ -38,35 +146,45 @@ Future<void> collectDatasetInfo(WidgetRef ref) async {
 
   request.headers.addAll(headers);
 
-  request.files.add(await http.MultipartFile.fromPath('positiveDataset', filePath));
-  request.files.add(await http.MultipartFile.fromPath('negativeDataset', filePath2));
+  request.files
+      .add(await http.MultipartFile.fromPath('positiveDataset', positiveData));
+  request.files
+      .add(await http.MultipartFile.fromPath('negativeDataset', negativeData));
+  request.files.add(await http.MultipartFile.fromPath('videoDemo', videoDemo));
 
 // DatasetInfo==============================================================
-  double avgLuminanceValue = ref.watch(luminanceProvider);
-  int numExecutionValue = ref.watch(numExec);
-  double avgSequenceValue = ref.watch(averageFrameState);
-  int minSequenceValue = ref.watch(minFrameState);
-  int maxSequenceValue = ref.watch(maxFrameState);
+  int numExecutionValuePositive =
+      ref.watch(coordinatesDataProvider).state.length;
+  double avgSequenceValuePositive = ref.watch(averageFrameState);
+  int minSequenceValuePositive = ref.watch(minFrameState);
+  int maxSequenceValuePositive = ref.watch(maxFrameState);
+
+  int numExecutionValueNegative =
+      ref.watch(incorrectCoordinatesDataProvider).state.length;
+  double avgSequenceValueNegative = ref.watch(averageFrameNegativeState);
+  int minSequenceValueNegative = ref.watch(minFrameNegativeState);
+  int maxSequenceValueNegative = ref.watch(maxFrameNegativeState);
 
   // request.fields['avgLuminance'] = avgLuminanceValue.toString();
-  request.fields['numExecution'] = numExecutionValue.toString();
-  request.fields['avgSequence'] = avgSequenceValue.toString();
-  request.fields['minSequence'] = minSequenceValue.toString();
-  request.fields['maxSequence'] = maxSequenceValue.toString();
+  request.fields['numExecutionPositive'] = numExecutionValuePositive.toString();
+  request.fields['avgSequencePositive'] = avgSequenceValuePositive.toString();
+  request.fields['minSequencePositive'] = minSequenceValuePositive.toString();
+  request.fields['maxSequencePositive'] = maxSequenceValuePositive.toString();
+
+  request.fields['numExecutionNegative'] = numExecutionValueNegative.toString();
+  request.fields['avgSequenceNegative'] = avgSequenceValueNegative.toString();
+  request.fields['minSequenceNegative'] = minSequenceValueNegative.toString();
+  request.fields['maxSequenceNegative'] = maxSequenceValueNegative.toString();
 // DatasetInfo==============================================================
 
 // ExerciseInfo==============================================================
   String exerciseNameVale = ref.watch(exerciseNameProvider);
-  String descriptionValue = ref.watch(descriptionProvider);
-  // String additionalNotesValue = ref.watch(additionalNotesProvider);
-  // String partsAffectedValue = ref.watch(partsAffectedProvider);
   int exerciseNumSetValue = ref.watch(exerciseNumSetProvider);
   int exerciseNumExecutionValue = ref.watch(exerciseNumExecutionProvider);
 
   request.fields['exerciseName'] = exerciseNameVale;
-  request.fields['description'] = descriptionValue;
-  // request.fields['additionalNotes'] = additionalNotesValue;
-  // request.fields['partsAffected'] = partsAffectedValue;
+  request.fields['ingoreCoordinates'] =
+      ref.watch(ignoreCoordinatesProvider).toString();
   request.fields['exerciseNumSet'] = exerciseNumSetValue.toString();
   request.fields['exerciseNumExecution'] = exerciseNumExecutionValue.toString();
 // ExerciseInfo==============================================================
@@ -84,7 +202,7 @@ Future<void> collectDatasetInfo(WidgetRef ref) async {
 
 void setSessionVariable(String sessionKey) async {
   var url =
-      Uri.parse('http://192.168.1.18:8000/modelTraining/set_session_variable/');
+      Uri.parse('http://${ipAddress}/modelTraining/set_session_variable/');
 
   final headers = {
     'Authorization': sessionKey,
@@ -100,8 +218,7 @@ void setSessionVariable(String sessionKey) async {
 }
 
 void getSessionVariable(String sessionKey) async {
-  var url =
-      Uri.parse('http://192.168.1.18:8000/modelTraining/get_session_variable/');
+  var url = Uri.parse('http:/${ipAddress}/modelTraining/get_session_variable/');
 
   final headers = {
     'Authorization': sessionKey,
@@ -118,7 +235,7 @@ void getSessionVariable(String sessionKey) async {
 
 Future<String> getSessionKey() async {
   // final response = await http.get(Uri.parse(
-  //     'http://192.168.1.18:8000/modelTraining/generate_session_key/'));
+  //     'http://${ipAddress}/modelTraining/generate_session_key/'));
 
   // if (response.statusCode == 200) {
   //   final sessionKey = response.body;
@@ -140,4 +257,25 @@ void fetchSessionKey() async {
   } catch (e) {
     print('Error: $e');
   }
+}
+
+Future<void> retrainModel(WidgetRef ref, String exerciseId) async {
+  var url = Uri.parse('http://${ipAddress}/modelTraining/retrain_model/');
+
+  var request = http.MultipartRequest('POST', url);
+  print("ref.watch(correctDataSetPath) ---> ${ref.watch(correctDataSetPath)}");
+  print(
+      "ref.watch(incorrectDataSetPath) ---> ${ref.watch(incorrectDataSetPath)}");
+
+  String positiveData = ref.watch(correctDataSetPath);
+  String negativeData = ref.watch(incorrectDataSetPath);
+  print("exercise ID in API ----> $exerciseId");
+  request.files
+      .add(await http.MultipartFile.fromPath('positiveDataset', positiveData));
+  request.files
+      .add(await http.MultipartFile.fromPath('negativeDataset', negativeData));
+
+  request.fields['exerciseId'] = exerciseId.toString();
+
+  var response = await http.Client().send(request);
 }

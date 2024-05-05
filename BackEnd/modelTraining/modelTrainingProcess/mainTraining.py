@@ -1,4 +1,5 @@
 
+from pathlib import Path
 import optuna
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
@@ -26,7 +27,31 @@ from django.contrib.sessions.backends.db import SessionStore
 from modelTraining.models import ModelInfo
 
 
-def trainModel(trainingDataSetFilePath, session_key):
+def trainModel(positiveDataPath, negativeDataPath,  dataset_info=None, model_info=None):
+    best_model = ""
+    y_train = []
+    X_train = []
+    X_test = []
+    y_test = []
+    rand_batches = []
+    checking_input_positive = []
+    checking_input_negative = []
+    best_combined_metric = 0.0
+    best_model_tflite = ""
+    rand_batches = []
+
+    checking_input_positive = []
+    checking_input_negative = []
+
+    setModelInfo = ModelInfo(
+        modelID="",
+        modelUrl="",
+        # FOR TESTING!
+        valLoss=0,
+        # FOR TESTING!
+
+        valAccuracy=0
+    )
 
     def noise_compile(input_list, sequence_number):
         compile = []
@@ -45,6 +70,7 @@ def trainModel(trainingDataSetFilePath, session_key):
         return final_compile
 
     def create_lstm_model(trial):
+        nonlocal X_train
         model = Sequential()
         custom_early_stopping = EarlyStopping(
             monitor='val_loss', patience=15, restore_best_weights=True)
@@ -91,12 +117,14 @@ def trainModel(trainingDataSetFilePath, session_key):
         return model
 
     def objective(trial):
-        global best_combined_metric
-        global best_model
+        nonlocal X_train
+        nonlocal best_combined_metric
+        nonlocal rand_batches
+        nonlocal checking_input_positive
+        nonlocal checking_input_negative
+        nonlocal best_model_tflite
 
-        global y_train
-        global best_model_tflite
-        global y_test
+        print("best_combined_metric ----> ", best_combined_metric)
 
         best_val_loss = 0
 
@@ -110,10 +138,10 @@ def trainModel(trainingDataSetFilePath, session_key):
         y_train_int = y_train.astype(int)
         y_test_int = y_test.astype(int)
 
-    # executing of model
-
-        history = model.fit(X_train, y_train, epochs=100, batch_size=124, validation_split=0.2, callbacks=[
-                            custom_early_stopping, lr_reduction_callback], verbose=1)
+        history = model.fit(X_train, y_train, epochs=10, batch_size=124, validation_split=0.2, callbacks=[
+                            custom_early_stopping, lr_reduction_callback], verbose=0)
+        # history = model.fit(X_train, y_train, epochs=100, batch_size=124, validation_split=0.2, callbacks=[
+        #                     custom_early_stopping, lr_reduction_callback], verbose=0)
 
         test_loss, test_accuracy = model.evaluate(
             X_test, y_test_int, verbose=0)
@@ -128,14 +156,19 @@ def trainModel(trainingDataSetFilePath, session_key):
         temp = rand_batches[0].astype(np.float32)
 
         id_num = str(rand.randint(1000, 9999))
-        model.save('testingModel')
-
-        file_saved_path = convert_tf_to_tflite('/content/testingModel', [1, len(positive_data[0]), len(
-            positive_data[0][0])], temp, 'whole_model', id_num, test_loss, test_accuracy)
+        model.save(Path(
+            'D:/CLARK/Documents/fitguidef/BackEnd/assets/models/nonTFLiteModels/testModel'))
+        file_saved_path = convert_tf_to_tflite(Path('D:/CLARK/Documents/fitguidef/BackEnd/assets/models/nonTFLiteModels/testModel'), [1, len(X_train[0]), len(
+            X_train[0][0])], temp, 'whole_model', id_num, test_loss, test_accuracy)
         checking_input_value = checking_inputs(
             checking_input_positive, checking_input_negative, file_saved_path)
 
         combined_metric = combined_metric * 0.5 + checking_input_value * 0.5
+        print("best_combined_metric -> ", best_combined_metric,
+              "combined_metric ->", combined_metric)
+        print("best_model_tflite -->", best_model_tflite)
+        print("os.path.exists(best_model_tflite) ----> ",
+              os.path.exists(best_model_tflite))
 
         if best_combined_metric <= combined_metric:
             if best_model_tflite is not None and os.path.exists(best_model_tflite):
@@ -144,23 +177,36 @@ def trainModel(trainingDataSetFilePath, session_key):
                 best_model_tflite = file_saved_path
                 best_combined_metric = combined_metric
                 print("replaced with-->", best_model_tflite)
-            elif best_model_tflite is None:
+            elif os.path.exists(best_model_tflite) == False:
                 print("still empty model-->", best_model_tflite)
                 best_model_tflite = file_saved_path
                 best_combined_metric = combined_metric
         else:
-            if os.path.exists(file_saved_path):
+            if os.path.exists(best_model_tflite):
                 os.remove(file_saved_path)
 
         best_model = None
         return combined_metric
 
-    def training_main(raw_positive, raw_negative, raw_noise, session_key):
-        best_val_loss = float('inf')
+    def training_main(raw_positive, raw_negative, raw_noise, model_info=None):
+        nonlocal X_train
+        nonlocal y_train
+
+        nonlocal X_test
+        nonlocal y_test
+
+        nonlocal rand_batches
+
+        nonlocal checking_input_positive
+        nonlocal checking_input_negative
+
+        nonlocal best_model_tflite
+
+        nonlocal setModelInfo
+
+        best_val_loss = 0.0
         best_val_accuracy = 0.0
         correctDataAugmentation_final = []
-        best_combined_metric = 0
-        best_model_tflite = ""
 
         correct_data = raw_positive[0]
         incorrect_data = raw_negative[0]
@@ -198,7 +244,8 @@ def trainModel(trainingDataSetFilePath, session_key):
 
         # Optimize hyperparameters and architecture
         study = optuna.create_study(direction='maximize')
-        study.optimize(objective, n_trials=25)
+        # study.optimize(objective, n_trials=25)
+        study.optimize(objective, n_trials=1)
 
         # Print the best hyperparameters and architecture
         best_trial = study.best_trial
@@ -207,47 +254,55 @@ def trainModel(trainingDataSetFilePath, session_key):
             print(f"  {key}: {value}")
         print("Best Accuracy:", best_trial.value)
 
-        session_store = SessionStore(session_key=session_key)
+        # session_store = SessionStore(session_key=session_key)
+        # session_store['setModelInfo'] = setModelInfo
 
-        randId = rand.randint(0, 999999999)
+        # print("model_info_instance(Train model) --> ",
+        #       session_store['setModelInfo'])
 
-        setModelInfo = ModelInfo(
-            modelID=randId,
-            modelUrl=best_model_tflite,
-            valLoss=best_val_loss,
-            valAccuracy=best_val_accuracy
-        )
-        setModelInfo.save()
+        if (model_info == None):
+            randId = rand.randint(0, 999999999)
+            print("main training RETRAINING")
 
-        session_store['setModelInfo'] = setModelInfo
-        print("model_info_instance(Train model) --> ",
-              session_store['setModelInfo'])
+            setModelInfo = ModelInfo(
+                modelID=randId,
+                modelUrl=best_model_tflite,
+                # FOR TESTING!
+                valLoss=0,
+                # FOR TESTING!
+                valAccuracy=best_trial.value,
+                datasetID=dataset_info
+            )
+            setModelInfo.save()
+            print("main training training")
 
-        return setModelInfo
-        # setModelInfo.save()
+            return setModelInfo
 
-    raw_positive_dataset = txt_pre_process(trainingDataSetFilePath, 1)
+        else:
+            print("main training retraining ---->", model_info)
+            if os.path.exists(model_info.modelUrl):
+                os.remove(model_info.modelUrl)
+
+            model_info.modelUrl = best_model_tflite
+            model_info.valAccuracy = best_trial.value
+
+            model_info.save()
+
+    raw_positive_dataset = txt_pre_process(positiveDataPath, 1)
     base_data_noise = txt_pre_process(
-        'D:/CLARK/Documents/fitguidef/BackEnd/modelTraining/noiseDatasets/firstExerciseFitguide(Wrong)V2 (1).txt', 0, True, 6)
-    raw_negative_dataset = []
-    session_store = SessionStore(session_key=session_key)
+        'D:/CLARK/Documents/fitguidef/BackEnd/assets/trainingData/noiseDatasets/noiseData1.txt', 0, True, 6)
 
-    training_main(raw_positive_dataset,raw_negative_dataset,base_data_noise,session_store)
+    raw_negative_dataset = txt_pre_process(negativeDataPath, 0)
 
+    # session_store = SessionStore(session_key=session_key)
+
+    training_main(raw_positive_dataset, raw_negative_dataset,
+                  base_data_noise, model_info)
 
     randId = rand.randint(0, 999999999)
 
-    setModelInfo = ModelInfo(
-        modelID=randId,
-        modelUrl=best_model_tflite,
-        valLoss=best_val_loss,
-        valAccuracy=best_val_accuracy
-    )
-    setModelInfo.save()
-
-    session_store['setModelInfo'] = setModelInfo
-    print("model_info_instance(Train model) --> ",
-          session_store['setModelInfo'])
+    # session_store['setModelInfo'] = setModelInfo
+    # print("model_info_instance(Train model) --> ",
+    #       session_store['setModelInfo'])
 
     return setModelInfo
-    # setModelInfo.save()
